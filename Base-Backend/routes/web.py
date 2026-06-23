@@ -239,5 +239,50 @@ def admin_audit_logs():
     
     return render_template('admin_audit_logs.html', logs=logs, chain_valid=chain_valid, action_filter=action_filter, actor_filter=actor_filter)
 
+@web_bp.route('/complaints/new')
+def new_complaint():
+    if not g.user:
+        return redirect(url_for('web.login'))
+    
+    target_id = request.args.get('target_id', '')
+    target_role = request.args.get('target_role', '')
+    return render_template('complaint_new.html', target_id=target_id, target_role=target_role)
+
+@web_bp.route('/admin/complaints')
+def admin_complaints():
+    if not g.user or g.user['role'] != 'admin':
+        return redirect(url_for('web.login'))
+        
+    from models.db import get_db
+    db = get_db()
+    cursor = db.cursor()
+    
+    status_filter = request.args.get('status', '')
+    
+    query = """
+     SELECT c.complaint_id, c.complainant_id, c.target_id, c.target_role, c.description, c.status, c.admin_notes, CAST(c.created_at AS TEXT) as created_at, CAST(c.resolved_at AS TEXT) as resolved_at,
+            u.name as complainant_name,
+            COALESCE(s.user_id, v.user_id, clg.user_id) as target_user_id,
+            COALESCE(u_tgt.name, 'Unknown Target') as target_name,
+            COALESCE(u_tgt.status, 'active') as target_status
+     FROM complaints c
+     JOIN users u ON c.complainant_id = u.id
+     LEFT JOIN students s ON c.target_role = 'student' AND c.target_id = s.student_id
+     LEFT JOIN volunteers v ON c.target_role = 'volunteer' AND c.target_id = v.volunteer_id
+     LEFT JOIN colleges clg ON c.target_role = 'college' AND c.target_id = clg.college_id
+     LEFT JOIN users u_tgt ON COALESCE(s.user_id, v.user_id, clg.user_id) = u_tgt.id
+    """
+    params = []
+    if status_filter:
+        query += " WHERE c.status = ?"
+        params.append(status_filter)
+        
+    query += " ORDER BY c.created_at DESC"
+    
+    cursor.execute(query, params)
+    complaints = [dict(row) for row in cursor.fetchall()]
+    
+    return render_template('admin_complaints.html', complaints=complaints, status_filter=status_filter)
+
 
 

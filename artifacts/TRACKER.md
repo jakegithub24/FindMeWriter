@@ -46,11 +46,11 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 | ID | Task | Owner | Status | Notes |
 |----|------|-------|--------|-------|
-| S4-01 | Complaint submission form | — | 🟡 | |
-| S4-02 | Target ID validation | — | 🟡 | |
-| S4-03 | Admin complaint triage queue | — | 🟡 | |
-| S4-04 | Account suspend/flag actions | — | 🟡 | |
-| S4-05 | Complaint outcome audit logging | — | 🟡 | |
+| S4-01 | Complaint submission form | — | 🔵 | |
+| S4-02 | Target ID validation | — | 🔵 | |
+| S4-03 | Admin complaint triage queue | — | 🔵 | |
+| S4-04 | Account suspend/flag actions | — | 🔵 | |
+| S4-05 | Complaint outcome audit logging | — | 🔵 | |
 
 ## Sprint 5: Help Desk (Week 6)
 
@@ -87,7 +87,7 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 ## Overall Progress
 - **Total Tasks**: 42
-- **Complete**: 23
+- **Complete**: 28
 - **In Progress**: 0
-- **Not Started**: 19
+- **Not Started**: 14
 - **Blocked**: 0

@@ -7,9 +7,11 @@ from middleware.validators import validate_public_id
 complaints_bp = Blueprint('complaints', __name__)
 
 @complaints_bp.route('', methods=['POST'])
-@require_role('student')  # or any role? But allow any authenticated user.
 def submit_complaint():
-    # Actually, any authenticated user can complain. We'll allow all roles.
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized', 'message': 'Missing or invalid token'}), 401
+        
     data = request.get_json()
     target_id = data.get('target_id')
     target_role = data.get('target_role')
@@ -18,11 +20,24 @@ def submit_complaint():
         return jsonify({'error': 'target_id, target_role, description required'}), 400
     if not validate_public_id(target_id):
         return jsonify({'error': 'Invalid target_id format'}), 400
-    user = get_current_user()
+        
     db = get_db()
     cursor = db.cursor()
-    # Check if target exists (optional)
-    # We'll just store
+    
+    # Target ID validation: Ensure target exists in the DB
+    if target_role == 'student':
+        cursor.execute("SELECT user_id FROM students WHERE student_id = ?", (target_id,))
+    elif target_role == 'volunteer':
+        cursor.execute("SELECT user_id FROM volunteers WHERE volunteer_id = ?", (target_id,))
+    elif target_role == 'college':
+        cursor.execute("SELECT user_id FROM colleges WHERE college_id = ?", (target_id,))
+    else:
+        return jsonify({'error': 'Invalid target_role. Must be student, volunteer, or college'}), 400
+        
+    target_row = cursor.fetchone()
+    if not target_row:
+        return jsonify({'error': f'Target {target_role} with ID {target_id} does not exist'}), 400
+
     cursor.execute(
         "INSERT INTO complaints (complainant_id, target_id, target_role, description, attachments_json) VALUES (?, ?, ?, ?, ?)",
         (user['user_id'], target_id, target_role, description, '[]')

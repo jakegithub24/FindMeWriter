@@ -40,7 +40,6 @@ def list_users():
 @admin_bp.route('/users/<int:user_id>/suspend', methods=['POST'])
 @require_role('admin')
 @require_admin_mfa
-@audit('USER_SUSPENDED')
 def suspend_user(user_id):
     data = request.get_json()
     action = data.get('action')  # 'suspend' or 'reactivate'
@@ -51,7 +50,7 @@ def suspend_user(user_id):
     cursor = db.cursor()
     cursor.execute("UPDATE users SET status = ? WHERE id = ?", (new_status, user_id))
     db.commit()
-    log_audit(g.user_id, 'admin', f'USER_{action.upper()}', user_id, {'action': action})
+    log_audit(g.user['user_id'], 'admin', f'USER_{action.upper()}', user_id, {'action': action})
     return jsonify({'message': f'User {action}ed successfully'}), 200
 
 @admin_bp.route('/audit-logs', methods=['GET'])

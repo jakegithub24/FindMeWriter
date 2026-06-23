@@ -13,7 +13,7 @@ class Config:
     ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
     if not ENCRYPTION_KEY:
         raise ValueError("ENCRYPTION_KEY must be set in environment")
-    ADMIN_TOTP_SECRET = os.getenv('ADMIN_TOTP_SECRET', 'admin-mfa-secret')
+    ADMIN_TOTP_SECRET = os.getenv('ADMIN_TOTP_SECRET', 'KVKVEVCSK5JVETKB')
     RATE_LIMIT = (5, 900)  # 5 attempts per 15 minutes
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')

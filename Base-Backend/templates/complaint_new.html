@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Submit a Complaint - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card p-4 shadow-sm border border-danger border-opacity-10">
+      <h1 class="h3 fw-bold text-primary mb-3">
+        <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Submit a Complaint
+      </h1>
+      <p class="text-muted">
+        Report any issues, missing scribes, behavior violations, or identity mismatch concerns. Your report will be sent to the administration team for investigation.
+      </p>
+
+      <div id="status-alert" class="alert d-none mb-3" role="alert"></div>
+
+      <form id="complaint-form" novalidate>
+        <div class="mb-3">
+          <label for="target_role" class="form-label fw-bold small">Who are you reporting?</label>
+          <select class="form-select" id="target_role" name="target_role" required>
+            <option value="" disabled {{ 'selected' if not target_role else '' }}>Select target role...</option>
+            <option value="student" {{ 'selected' if target_role == 'student' else '' }}>Student</option>
+            <option value="volunteer" {{ 'selected' if target_role == 'volunteer' else '' }}>Volunteer / Scribe</option>
+            <option value="college" {{ 'selected' if target_role == 'college' else '' }}>College / Institution</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="target_id" class="form-label fw-bold small">Public ID of reported user</label>
+          <input type="text" class="form-control font-monospace" id="target_id" name="target_id" 
+                 placeholder="e.g., VOL-ABCD, STU-XYZ1, CLG-1234" value="{{ target_id }}" required>
+          <div class="form-text small text-muted">Must be in prefix-suffix format (e.g. STU-XXXX, VOL-XXXX, CLG-XXXX).</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label fw-bold small">Detailed Description of the Issue</label>
+          <textarea class="form-control" id="description" name="description" rows="5" 
+                    placeholder="Provide details about what happened, date/time, and specific violations..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-danger w-100 py-2 fw-bold mt-2">
+          <i class="fa-solid fa-paper-plane me-1"></i>Submit Complaint
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('complaint-form');
+    const alertBox = document.getElementById('status-alert');
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('d-none');
+
+      const target_id = document.getElementById('target_id').value.trim();
+      const target_role = document.getElementById('target_role').value;
+      const description = document.getElementById('description').value.trim();
+
+      if (!target_id || !target_role || !description) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'All fields are required.';
+        alertBox.classList.remove('d-none');
+        return;
+      }
+
+      try {
+        const token = getCookie('access_token');
+        const response = await fetch('/api/complaints', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ target_id, target_role, description })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alertBox.className = 'alert alert-success';
+          alertBox.textContent = 'Complaint submitted successfully. Redirecting...';
+          alertBox.classList.remove('d-none');
+          form.reset();
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Failed to submit complaint.';
+          alertBox.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'A network error occurred. Please try again.';
+        alertBox.classList.remove('d-none');
+      }
+    });
+  });
+</script>
+{% endblock %}

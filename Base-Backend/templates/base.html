@@ -66,6 +66,17 @@
                   <a class="nav-link px-3" href="/requests/new">Create Request</a>
                 </li>
               {% endif %}
+              <li class="nav-item">
+                <a class="nav-link px-3" href="/complaints/new">File Complaint</a>
+              </li>
+              {% if g.user.role == 'admin' %}
+                <li class="nav-item">
+                  <a class="nav-link px-3" href="/admin/complaints">Complaints</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link px-3" href="/admin/audit-logs">Audit Logs</a>
+                </li>
+              {% endif %}
             {% endif %}
           </ul>
 

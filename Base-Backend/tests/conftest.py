@@ -9,9 +9,10 @@ def app():
     # Create a temporary file for the database
     db_fd, db_path = tempfile.mkstemp()
     
-    # We must set ENCRYPTION_KEY in env for testing if not set
+    # We must set ENCRYPTION_KEY and a valid base32 ADMIN_TOTP_SECRET in env for testing
     if 'ENCRYPTION_KEY' not in os.environ:
         os.environ['ENCRYPTION_KEY'] = 'elhXbcx515t3rlDeBZdVTyd7qUoc8fmMjBm6cvn4I-M='
+    os.environ['ADMIN_TOTP_SECRET'] = 'KVKVEVCSK5JVETKB'
         
     app = create_app('testing')
     app.config.update({

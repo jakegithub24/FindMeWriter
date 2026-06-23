@@ -38,11 +38,11 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 - [x] **Milestone**: Verification and attendance are tamper-evident
 
 ### Phase 4: ComplaintBox & Moderation (Week 5)
-- [ ] Complaint submission with target ID validation
-- [ ] Admin complaint triage queue
-- [ ] Account suspension/flagging
-- [ ] Outcome logging to audit trail
-- [ ] **Milestone**: Complaint resolution cycle complete
+- [x] Complaint submission with target ID validation
+- [x] Admin complaint triage queue
+- [x] Account suspension/flagging
+- [x] Outcome logging to audit trail
+- [x] **Milestone**: Complaint resolution cycle complete
 
 ### Phase 5: Real-time Help Desk (Week 6)
 - [ ] Flask-SocketIO integration

@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Triage Queue - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+  <div class="col-md-8">
+    <h1 class="h2 fw-bold text-primary mb-1">
+      <i class="fa-solid fa-scale-balanced me-2"></i>Complaint Triage Queue
+    </h1>
+    <p class="text-muted">Review, investigate, and resolve user complaints and manage account status.</p>
+  </div>
+</div>
+
+<div id="status-alert" class="alert d-none mb-4" role="alert"></div>
+
+<!-- Filter Queue -->
+<div class="card p-3 mb-4 bg-light">
+  <form class="row g-3 align-items-end" method="GET">
+    <div class="col-md-6">
+      <label for="status" class="form-label small fw-bold">Filter by Status</label>
+      <select class="form-select" id="status" name="status">
+        <option value="" {{ 'selected' if not status_filter else '' }}>All Statuses</option>
+        <option value="open" {{ 'selected' if status_filter == 'open' else '' }}>Open</option>
+        <option value="under_review" {{ 'selected' if status_filter == 'under_review' else '' }}>Under Review</option>
+        <option value="resolved" {{ 'selected' if status_filter == 'resolved' else '' }}>Resolved</option>
+      </select>
+    </div>
+    <div class="col-md-6 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-50">
+        <i class="fa-solid fa-filter me-1"></i>Apply Filter
+      </button>
+      <a href="/admin/complaints" class="btn btn-outline-secondary w-50">Clear Filter</a>
+    </div>
+  </form>
+</div>
+
+<!-- Queue Table -->
+<div class="card p-4">
+  {% if complaints %}
+    <div class="table-responsive">
+      <table class="table align-middle table-hover">
+        <caption class="visually-hidden">List of user complaints pending administrative triage</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Date Filed</th>
+            <th scope="col">Complainant</th>
+            <th scope="col">Target User</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cmp in complaints %}
+            <tr>
+              <td><code>#{{ cmp.complaint_id }}</code></td>
+              <td class="small font-monospace">{{ cmp.created_at }}</td>
+              <td>
+                <strong>{{ cmp.complainant_name }}</strong><br>
+                <small class="text-muted">User ID: #{{ cmp.complainant_id }}</small>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border font-monospace">{{ cmp.target_id }}</span>
+                <span class="badge bg-secondary text-capitalize">{{ cmp.target_role }}</span>
+                <br>
+                <small class="text-muted">{{ cmp.target_name }}</small>
+                {% if cmp.target_status == 'deactivated' %}
+                  <span class="badge bg-danger ms-1">Suspended</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-{{ 'danger' if cmp.status == 'open' else 'warning text-dark' if cmp.status == 'under_review' else 'success' }} px-3 py-2">
+                  {{ cmp.status | replace('_', ' ') | capitalize }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-primary triage-btn"
+                          data-complaint-id="{{ cmp.complaint_id }}"
+                          data-target-id="{{ cmp.target_id }}"
+                          data-target-role="{{ cmp.target_role }}"
+                          data-target-user-id="{{ cmp.target_user_id }}"
+                          data-target-name="{{ cmp.target_name }}"
+                          data-target-status="{{ cmp.target_status }}"
+                          data-description="{{ cmp.description }}"
+                          data-status="{{ cmp.status }}"
+                          data-notes="{{ cmp.admin_notes or '' }}"
+                          data-bs-toggle="modal"
+                          data-bs-target="#triageModal">
+                    Triage & Moderation
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fa-solid fa-circle-check fa-3x text-success mb-3"></i>
+      <p class="mb-0">No complaints match the filter. All clear!</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Triage and Moderation Modal -->
+<div class="modal fade" id="triageModal" tabindex="-1" aria-labelledby="triageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5 fw-bold text-primary" id="triageModalLabel">
+          <i class="fa-solid fa-circle-info me-2"></i>Complaint Triage & Account Action
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <h3 class="h6 fw-bold text-muted uppercase small">Complaint Description</h3>
+          <div class="p-3 bg-light rounded text-dark font-sans" id="modal-description" style="white-space: pre-wrap;"></div>
+        </div>
+
+        <hr>
+
+        <form id="triage-form">
+          <input type="hidden" id="modal-complaint-id">
+          <input type="hidden" id="modal-target-user-id">
+
+          <!-- Status and Resolution Notes -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="modal-status" class="form-label fw-bold small">Complaint Status</label>
+              <select class="form-select" id="modal-status" required>
+                <option value="open">Open</option>
+                <option value="under_review">Under Review</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            </div>
+            
+            <div class="col-md-12">
+              <label for="modal-notes" class="form-label fw-bold small">Administrative/Resolution Notes</label>
+              <textarea class="form-control" id="modal-notes" rows="3" placeholder="Provide details on findings, action taken, and final outcome..."></textarea>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Account Suspend/Reactivate -->
+          <div class="card border-warning border-opacity-50 bg-warning bg-opacity-10 p-3 mb-3">
+            <h3 class="h6 fw-bold text-warning-emphasis mb-2"><i class="fa-solid fa-user-gear me-2"></i>Account Status Control</h3>
+            <p class="small text-muted mb-3">Suspend or reactivate the reported user's account access.</p>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <strong>Reported User:</strong> <span id="modal-target-info" class="font-monospace"></span>
+                (<span id="modal-target-name-lbl"></span>)
+              </div>
+              <button type="button" class="btn btn-sm" id="action-suspend-btn"></button>
+            </div>
+          </div>
+
+          <!-- MFA TOTP input (Required for all updates) -->
+          <div class="mb-3">
+            <label for="modal-mfa" class="form-label fw-bold text-danger small">Admin MFA TOTP Verification (Required)</label>
+            <input type="text" class="form-control text-center font-monospace fs-4 w-50 mx-auto" id="modal-mfa" maxlength="6" placeholder="******" required>
+            <div class="form-text text-center text-muted small">Enter the 6-digit OTP from your authenticator app to authorize this change.</div>
+          </div>
+
+          <div class="modal-footer px-0 pb-0 mt-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save Changes & Resolve</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const alertBox = document.getElementById('status-alert');
+    const triageModalEl = document.getElementById('triageModal');
+    const triageModal = new bootstrap.Modal(triageModalEl);
+
+    // Form elements
+    const complaintIdInput = document.getElementById('modal-complaint-id');
+    const targetUserIdInput = document.getElementById('modal-target-user-id');
+    const descDiv = document.getElementById('modal-description');
+    const statusSelect = document.getElementById('modal-status');
+    const notesText = document.getElementById('modal-notes');
+    const targetInfoSpan = document.getElementById('modal-target-info');
+    const targetNameSpan = document.getElementById('modal-target-name-lbl');
+    const suspendBtn = document.getElementById('action-suspend-btn');
+    const mfaInput = document.getElementById('modal-mfa');
+    const triageForm = document.getElementById('triage-form');
+
+    let currentTargetStatus = 'active';
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function showAlert(type, message) {
+      alertBox.className = `alert alert-${type}`;
+      alertBox.textContent = message;
+      alertBox.classList.remove('d-none');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Load info into modal on click
+    document.querySelectorAll('.triage-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-complaint-id');
+        const targetUserId = btn.getAttribute('data-target-user-id');
+        const targetId = btn.getAttribute('data-target-id');
+        const targetRole = btn.getAttribute('data-target-role');
+        const targetName = btn.getAttribute('data-target-name');
+        const targetStatus = btn.getAttribute('data-target-status');
+        const desc = btn.getAttribute('data-description');
+        const status = btn.getAttribute('data-status');
+        const notes = btn.getAttribute('data-notes');
+
+        complaintIdInput.value = id;
+        targetUserIdInput.value = targetUserId;
+        descDiv.textContent = desc;
+        statusSelect.value = status;
+        notesText.value = notes;
+        targetInfoSpan.textContent = `${targetId} (${targetRole.toUpperCase()})`;
+        targetNameSpan.textContent = targetName;
+        mfaInput.value = '';
+
+        currentTargetStatus = targetStatus;
+        if (targetStatus === 'deactivated') {
+          suspendBtn.className = 'btn btn-sm btn-success';
+          suspendBtn.innerHTML = '<i class="fa-solid fa-user-check me-1"></i>Reactivate Account';
+        } else {
+          suspendBtn.className = 'btn btn-sm btn-danger';
+          suspendBtn.innerHTML = '<i class="fa-solid fa-user-slash me-1"></i>Suspend Account';
+        }
+      });
+    });
+
+    // Handle account Suspend/Reactivate button click inside modal
+    suspendBtn.addEventListener('click', async () => {
+      const targetUserId = targetUserIdInput.value;
+      const mfaCode = mfaInput.value.trim();
+
+      if (!mfaCode || mfaCode.length !== 6) {
+        alert('6-digit MFA TOTP code is required in the input field to perform account control actions.');
+        mfaInput.focus();
+        return;
+      }
+
+      const action = currentTargetStatus === 'deactivated' ? 'reactivate' : 'suspend';
+      if (!confirm(`Are you sure you want to ${action} this user's account?`)) {
+        return;
+      }
+
+      try {
+        const token = getCookie('access_token');
+        const response = await fetch(`/api/admin/users/${targetUserId}/suspend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'X-Admin-MFA': mfaCode
+          },
+          body: JSON.stringify({ action: action })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          triageModal.hide();
+          showAlert('success', `User account successfully ${action}ed!`);
+          setTimeout(() => { window.location.reload(); }, 1500);
+        } else {
+          alert(data.error || `Failed to ${action} user account.`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('A network error occurred.');
+      }
+    });
+
+    // Handle saving triage status / notes form submit
+    triageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const complaintId = complaintIdInput.value;
+      const status = statusSelect.value;
+      const notes = notesText.value.trim();
+      const mfaCode = mfaInput.value.trim();
+
+      if (!mfaCode || mfaCode.length !== 6) {
+        alert('6-digit MFA TOTP code is required to authorize complaint updates.');
+        mfaInput.focus();
+        return;
+      }
+
+      try {
+        const token = getCookie('access_token');
+        // Update complaint
+        const response = await fetch(`/api/complaints/${complaintId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'X-Admin-MFA': mfaCode
+          },
+          body: JSON.stringify({ status: status, admin_notes: notes })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          triageModal.hide();
+          showAlert('success', 'Complaint successfully updated and saved.');
+          setTimeout(() => { window.location.reload(); }, 1500);
+        } else {
+          alert(data.error || 'Failed to update complaint.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('A network error occurred.');
+      }
+    });
+  });
+</script>
+{% endblock %}
