@@ -30,7 +30,23 @@ def create_app(config_name=None):
     # Initialize extensions
     CORS(app)  # adjust in production
     limiter.init_app(app)
-    socketio.init_app(app, async_mode='eventlet')
+
+    # Save existing server handlers to preserve them across multiple init_app calls (e.g. in tests)
+    old_handlers = {}
+    old_namespace_handlers = {}
+    if hasattr(socketio, 'server') and socketio.server:
+        old_handlers = getattr(socketio.server, 'handlers', {})
+        old_namespace_handlers = getattr(socketio.server, 'namespace_handlers', {})
+
+    if app.config.get('TESTING'):
+        socketio.init_app(app)
+    else:
+        socketio.init_app(app, async_mode='eventlet')
+
+    if old_handlers:
+        socketio.server.handlers.update(old_handlers)
+    if old_namespace_handlers:
+        socketio.server.namespace_handlers.update(old_namespace_handlers)
 
     # Database
     init_db(app)

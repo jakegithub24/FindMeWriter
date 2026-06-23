@@ -56,11 +56,11 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 | ID | Task | Owner | Status | Notes |
 |----|------|-------|--------|-------|
-| S5-01 | SocketIO server setup | — | 🟡 | |
-| S5-02 | Chat room UI (volunteer + user) | — | 🟡 | |
-| S5-03 | Message persistence | — | 🟡 | |
-| S5-04 | Escalation event + admin notification | — | 🟡 | |
-| S5-05 | Volunteer shift rota signup | — | 🟡 | |
+| S5-01 | SocketIO server setup | — | 🔵 | |
+| S5-02 | Chat room UI (volunteer + user) | — | 🔵 | |
+| S5-03 | Message persistence | — | 🔵 | |
+| S5-04 | Escalation event + admin notification | — | 🔵 | |
+| S5-05 | Volunteer shift rota signup | — | 🔵 | |
 
 ## Sprint 6: Ratings & Polish (Week 7)
 
@@ -86,8 +86,8 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 | S7-07 | Community onboarding | — | 🟡 | |
 
 ## Overall Progress
-- **Total Tasks**: 42
-- **Complete**: 28
+- **Total Tasks**: 47
+- **Complete**: 33
 - **In Progress**: 0
 - **Not Started**: 14
 - **Blocked**: 0

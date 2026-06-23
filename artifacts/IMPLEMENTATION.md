@@ -45,12 +45,12 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 - [x] **Milestone**: Complaint resolution cycle complete
 
 ### Phase 5: Real-time Help Desk (Week 6)
-- [ ] Flask-SocketIO integration
-- [ ] Chat room UI with volunteer online status
-- [ ] Message persistence
-- [ ] Escalation to admin
-- [ ] Volunteer shift rota signup
-- [ ] **Milestone**: Real-time support functional
+- [x] Flask-SocketIO integration
+- [x] Chat room UI with volunteer online status
+- [x] Message persistence
+- [x] Escalation to admin
+- [x] Volunteer shift rota signup
+- [x] **Milestone**: Real-time support functional
 
 ### Phase 6: Trust, Ratings & UX Polish (Week 7)
 - [ ] Post-exam rating form (1–5 stars, accessible)

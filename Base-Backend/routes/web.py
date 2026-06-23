@@ -284,5 +284,41 @@ def admin_complaints():
     
     return render_template('admin_complaints.html', complaints=complaints, status_filter=status_filter)
 
+@web_bp.route('/helpdesk')
+def helpdesk():
+    if not g.user:
+        return redirect(url_for('web.login'))
+        
+    from models.db import get_db
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Default room_id is user_id based
+    room_id = f"user_{g.user['user_id']}"
+    
+    shifts = []
+    signed_up_shifts = []
+    if g.user['role'] == 'volunteer':
+        # Let's seed shifts dynamically if none exist so the shift rota is populated
+        cursor.execute("SELECT COUNT(*) as count FROM shifts")
+        if cursor.fetchone()['count'] == 0:
+            cursor.execute("INSERT INTO shifts (date, start_time, end_time, slots, filled) VALUES ('2026-07-01', '08:00', '12:00', 5, 0)")
+            cursor.execute("INSERT INTO shifts (date, start_time, end_time, slots, filled) VALUES ('2026-07-01', '12:00', '16:00', 5, 0)")
+            cursor.execute("INSERT INTO shifts (date, start_time, end_time, slots, filled) VALUES ('2026-07-01', '16:00', '20:00', 5, 0)")
+            cursor.execute("INSERT INTO shifts (date, start_time, end_time, slots, filled) VALUES ('2026-07-02', '08:00', '12:00', 5, 0)")
+            cursor.execute("INSERT INTO shifts (date, start_time, end_time, slots, filled) VALUES ('2026-07-02', '12:00', '16:00', 5, 0)")
+            db.commit()
+
+        cursor.execute(
+            """SELECT s.*, 
+               (SELECT 1 FROM volunteer_shifts WHERE volunteer_id = ? AND shift_id = s.shift_id) as signed_up
+               FROM shifts s ORDER BY s.date, s.start_time""",
+            (g.user['user_id'],)
+        )
+        shifts = [dict(row) for row in cursor.fetchall()]
+        signed_up_shifts = [s['shift_id'] for s in shifts if s['signed_up']]
+        
+    return render_template('helpdesk.html', room_id=room_id, shifts=shifts, signed_up_shifts=signed_up_shifts)
+
 
 

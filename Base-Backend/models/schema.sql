@@ -144,5 +144,25 @@ CREATE INDEX IF NOT EXISTS idx_verifications_request ON verifications(request_id
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(actor_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp);
-CREATE INDEX IF NOT EXISTS idx_helpdesk_room ON helpdesk_messages(room_id);
+-- Helpdesk Shifts
+CREATE TABLE IF NOT EXISTS shifts (
+    shift_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    slots INTEGER DEFAULT 5,
+    filled INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_shifts (
+    volunteer_id INTEGER,
+    shift_id INTEGER,
+    PRIMARY KEY (volunteer_id, shift_id),
+    FOREIGN KEY (volunteer_id) REFERENCES volunteers(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (shift_id) REFERENCES shifts(shift_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_shifts_date ON shifts(date);
+CREATE INDEX IF NOT EXISTS idx_volunteer_shifts_vol ON volunteer_shifts(volunteer_id);
+
 
