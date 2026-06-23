@@ -22,14 +22,14 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 | ID | Task | Owner | Status | Notes |
 |----|------|-------|--------|-------|
-| S2-01 | Student request form (accessible) | — | 🟡 | |
-| S2-02 | College bulk request form | — | 🟡 | |
-| S2-03 | Volunteer feed + filters | — | 🟡 | |
-| S2-04 | Commit/backup flow + transactions | — | 🟡 | |
-| S2-05 | Auto-promote backup on cancellation | — | 🟡 | |
-| S2-06 | Student dashboard | — | 🟡 | |
-| S2-07 | Volunteer dashboard | — | 🟡 | |
-| S2-08 | College dashboard | — | 🟡 | |
+| S2-01 | Student request form (accessible) | — | 🔵 | |
+| S2-02 | College bulk request form | — | 🔵 | |
+| S2-03 | Volunteer feed + filters | — | 🔵 | |
+| S2-04 | Commit/backup flow + transactions | — | 🔵 | |
+| S2-05 | Auto-promote backup on cancellation | — | 🔵 | |
+| S2-06 | Student dashboard | — | 🔵 | |
+| S2-07 | Volunteer dashboard | — | 🔵 | |
+| S2-08 | College dashboard | — | 🔵 | |
 
 ## Sprint 3: Verification & Audit (Week 4)
 
@@ -87,7 +87,7 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 ## Overall Progress
 - **Total Tasks**: 42
-- **Complete**: 9
+- **Complete**: 17
 - **In Progress**: 0
-- **Not Started**: 33
+- **Not Started**: 25
 - **Blocked**: 0

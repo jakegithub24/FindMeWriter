@@ -21,13 +21,13 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 - [x] **Milestone**: All four roles can register and log in securely
 
 ### Phase 2: Request & Matching (Week 3)
-- [ ] Student request creation form
-- [ ] College bulk request posting
-- [ ] Volunteer feed with filters (location, language, date)
-- [ ] Commit/backup flow with database transactions
-- [ ] Automatic backup promotion on cancellation
-- [ ] Dashboards for Student, Volunteer, College
-- [ ] **Milestone**: End-to-end request matching works
+- [x] Student request creation form
+- [x] College bulk request posting
+- [x] Volunteer feed with filters (location, language, date)
+- [x] Commit/backup flow with database transactions
+- [x] Automatic backup promotion on cancellation
+- [x] Dashboards for Student, Volunteer, College
+- [x] **Milestone**: End-to-end request matching works
 
 ### Phase 3: Verification & Audit (Week 4)
 - [ ] College verification queue UI (side-by-side Aadhaar comparison)

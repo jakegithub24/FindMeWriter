@@ -118,3 +118,39 @@ def attendance_logs():
     )
     rows = cursor.fetchall()
     return jsonify([dict(row) for row in rows]), 200
+
+@college_bp.route('/requests/bulk', methods=['POST'])
+@require_role('college')
+@audit('COLLEGE_BULK_REQUESTS_CREATED')
+def create_bulk_requests():
+    data = request.get_json()
+    requests_list = data.get('requests')
+    if not requests_list or not isinstance(requests_list, list):
+        return jsonify({'error': 'A list of requests is required'}), 400
+        
+    user = get_current_user()
+    db = get_db()
+    cursor = db.cursor()
+    
+    try:
+        inserted_ids = []
+        for req in requests_list:
+            required = ['date', 'time', 'location', 'language', 'duration']
+            if not all(k in req for k in required):
+                db.rollback()
+                return jsonify({'error': 'Missing required fields in one of the requests'}), 400
+            
+            cursor.execute(
+                """INSERT INTO requests (created_by, creator_role, date, time, location, language, duration, num_writers, special_needs)
+                   VALUES (?, 'college', ?, ?, ?, ?, ?, ?, ?)""",
+                (user['user_id'], req['date'], req['time'], req['location'], req['language'],
+                 req['duration'], req.get('num_writers', 1), req.get('special_needs'))
+            )
+            inserted_ids.append(cursor.lastrowid)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': 'Failed to insert requests', 'details': str(e)}), 500
+        
+    return jsonify({'message': f'{len(inserted_ids)} requests created', 'request_ids': inserted_ids}), 201
+

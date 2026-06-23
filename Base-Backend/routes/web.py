@@ -53,7 +53,73 @@ def register():
 def dashboard():
     if not g.user:
         return redirect(url_for('web.login'))
-    return render_template('dashboard.html')
+        
+    from models.db import get_db
+    db = get_db()
+    cursor = db.cursor()
+    
+    role = g.user['role']
+    data = {}
+    
+    if role == 'student':
+        # Get student's requests
+        cursor.execute(
+            """SELECT r.*, 
+               (SELECT u.name FROM commitments c JOIN users u ON c.volunteer_id = u.id WHERE c.request_id = r.request_id AND c.status = 'active' LIMIT 1) as volunteer_name
+               FROM requests r WHERE r.created_by = ? ORDER BY r.created_at DESC""",
+            (g.user['user_id'],)
+        )
+        data['requests'] = [dict(row) for row in cursor.fetchall()]
+        
+    elif role == 'volunteer':
+        # Get volunteer's commitments
+        cursor.execute(
+            """SELECT c.commitment_id, c.role as commitment_role, r.*, u.name as creator_name
+               FROM commitments c
+               JOIN requests r ON c.request_id = r.request_id
+               LEFT JOIN users u ON r.created_by = u.id
+               WHERE c.volunteer_id = ? AND c.status = 'active'""",
+            (g.user['user_id'],)
+        )
+        data['commitments'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Get open requests for feed, filtering if parameters are present
+        loc = request.args.get('location', '')
+        lang = request.args.get('language', '')
+        dt = request.args.get('date', '')
+        
+        query = "SELECT r.*, u.name as creator_name FROM requests r JOIN users u ON r.created_by = u.id WHERE r.status = 'open'"
+        params = []
+        if loc:
+            query += " AND r.location LIKE ?"
+            params.append(f'%{loc}%')
+        if lang:
+            query += " AND r.language = ?"
+            params.append(lang)
+        if dt:
+            query += " AND r.date = ?"
+            params.append(dt)
+            
+        cursor.execute(query, params)
+        data['feed'] = [dict(row) for row in cursor.fetchall()]
+        data['filters'] = {'location': loc, 'language': lang, 'date': dt}
+        
+    elif role == 'college':
+        # Get college's requests
+        cursor.execute(
+            "SELECT * FROM requests WHERE created_by = ? ORDER BY created_at DESC",
+            (g.user['user_id'],)
+        )
+        data['requests'] = [dict(row) for row in cursor.fetchall()]
+        
+    return render_template('dashboard.html', data=data)
+
+@web_bp.route('/requests/new', methods=['GET'])
+def new_request():
+    if not g.user or g.user['role'] not in ('student', 'college'):
+        return redirect(url_for('web.login'))
+    return render_template('request_new.html')
+
 
 @web_bp.route('/profile')
 def profile():

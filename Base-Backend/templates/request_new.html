@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Create Scribe Request - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-7">
+    <div class="card p-4">
+      <h1 class="h3 fw-bold mb-4"><i class="fa-solid fa-plus-circle text-primary me-2"></i>Create Scribe Request</h1>
+
+      <!-- Alert Status -->
+      <div id="status-alert" class="alert d-none" role="alert" aria-live="polite"></div>
+
+      <form id="request-form" novalidate>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label for="date" class="form-label">Exam Date</label>
+            <input type="date" class="form-control" id="date" name="date" required>
+          </div>
+
+          <div class="col-sm-6">
+            <label for="time" class="form-label">Exam Start Time</label>
+            <input type="time" class="form-control" id="time" name="time" required>
+          </div>
+
+          <div class="col-12">
+            <label for="location" class="form-label">Exam Center Location / Address</label>
+            <input type="text" class="form-control" id="location" name="location" placeholder="e.g. Room 302, ABC High School, Sector 4, New Delhi" required>
+          </div>
+
+          <div class="col-sm-6">
+            <label for="language" class="form-label">Exam Language / Medium</label>
+            <select class="form-select" id="language" name="language" required>
+              <option value="" disabled selected>Select Language</option>
+              <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Tamil">Tamil</option>
+              <option value="Bengali">Bengali</option>
+              <option value="Telugu">Telugu</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="col-sm-6">
+            <label for="duration" class="form-label">Duration (Minutes)</label>
+            <input type="number" class="form-control" id="duration" name="duration" min="30" value="180" required>
+          </div>
+
+          <div class="col-12">
+            <label for="num_writers" class="form-label">Number of Scribes Needed</label>
+            <input type="number" class="form-control" id="num_writers" name="num_writers" min="1" max="5" value="1" required>
+          </div>
+
+          <div class="col-12">
+            <label for="special_needs" class="form-label">Special Needs / Instructions (Optional)</label>
+            <textarea class="form-control" id="special_needs" name="special_needs" rows="3" placeholder="Describe any specific scribe requirements or exam rules..."></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 mt-4">
+          <i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i>Submit Request
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('request-form');
+    const alertBox = document.getElementById('status-alert');
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('d-none');
+
+      const payload = {
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        location: document.getElementById('location').value,
+        language: document.getElementById('language').value,
+        duration: parseInt(document.getElementById('duration').value, 10),
+        num_writers: parseInt(document.getElementById('num_writers').value, 10),
+        special_needs: document.getElementById('special_needs').value
+      };
+
+      if (!payload.date || !payload.time || !payload.location || !payload.language || isNaN(payload.duration)) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Please fill out all required fields.';
+        alertBox.classList.remove('d-none');
+        return;
+      }
+
+      // Determine endpoint based on role
+      const role = "{{ g.user.role }}";
+      const endpoint = role === 'college' ? '/api/college/requests' : '/api/student/requests';
+
+      try {
+        const token = getCookie('access_token');
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alertBox.className = 'alert alert-success';
+          alertBox.textContent = 'Scribe request created successfully!';
+          alertBox.classList.remove('d-none');
+
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 1500);
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Failed to submit scribe request.';
+          alertBox.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'A network error occurred. Please try again.';
+        alertBox.classList.remove('d-none');
+      }
+    });
+  });
+</script>
+{% endblock %}

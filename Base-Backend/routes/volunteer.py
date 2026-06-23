@@ -42,30 +42,42 @@ def commit():
     user = get_current_user()
     db = get_db()
     cursor = db.cursor()
-    # Check if request is open
-    cursor.execute("SELECT status FROM requests WHERE request_id = ?", (request_id,))
-    row = cursor.fetchone()
-    if not row or row['status'] != 'open':
-        return jsonify({'error': 'Request not open'}), 400
-    # Check if volunteer already committed to this request
-    cursor.execute("SELECT * FROM commitments WHERE request_id = ? AND volunteer_id = ? AND status = 'active'", (request_id, user['user_id']))
-    if cursor.fetchone():
-        return jsonify({'error': 'Already committed to this request'}), 409
-    # If primary, ensure not already filled
-    if role == 'primary':
-        cursor.execute("SELECT COUNT(*) as cnt FROM commitments WHERE request_id = ? AND role = 'primary' AND status = 'active'", (request_id,))
-        if cursor.fetchone()['cnt'] > 0:
-            return jsonify({'error': 'Primary slot already filled'}), 409
-    # Insert commitment
-    cursor.execute(
-        "INSERT INTO commitments (request_id, volunteer_id, role, status) VALUES (?, ?, ?, 'active')",
-        (request_id, user['user_id'], role)
-    )
-    # If primary, update request status to filled
-    if role == 'primary':
-        cursor.execute("UPDATE requests SET status = 'filled' WHERE request_id = ?", (request_id,))
-    db.commit()
+    
+    try:
+        # Check if request is active (open or filled)
+        cursor.execute("SELECT status FROM requests WHERE request_id = ?", (request_id,))
+        row = cursor.fetchone()
+        if not row or row['status'] not in ('open', 'filled'):
+            return jsonify({'error': 'Request not open or filled'}), 400
+            
+        # Check if volunteer already committed to this request
+        cursor.execute("SELECT * FROM commitments WHERE request_id = ? AND volunteer_id = ? AND status = 'active'", (request_id, user['user_id']))
+        if cursor.fetchone():
+            return jsonify({'error': 'Already committed to this request'}), 409
+            
+        # If primary, ensure status is open and slot is not filled
+        if role == 'primary':
+            if row['status'] != 'open':
+                return jsonify({'error': 'Request is already filled'}), 400
+            cursor.execute("SELECT COUNT(*) as cnt FROM commitments WHERE request_id = ? AND role = 'primary' AND status = 'active'", (request_id,))
+            if cursor.fetchone()['cnt'] > 0:
+                return jsonify({'error': 'Primary slot already filled'}), 409
+                
+        # Insert commitment
+        cursor.execute(
+            "INSERT INTO commitments (request_id, volunteer_id, role, status) VALUES (?, ?, ?, 'active')",
+            (request_id, user['user_id'], role)
+        )
+        # If primary, update request status to filled
+        if role == 'primary':
+            cursor.execute("UPDATE requests SET status = 'filled' WHERE request_id = ?", (request_id,))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': 'Failed to record commitment', 'details': str(e)}), 500
+        
     return jsonify({'message': 'Commitment successful'}), 201
+
 
 @volunteer_bp.route('/commitments', methods=['GET'])
 @require_role('volunteer')
@@ -94,22 +106,31 @@ def cancel_commitment():
     user = get_current_user()
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT role, request_id FROM commitments WHERE commitment_id = ? AND volunteer_id = ? AND status = 'active'", (commitment_id, user['user_id']))
-    row = cursor.fetchone()
-    if not row:
-        return jsonify({'error': 'Commitment not found'}), 404
-    # Cancel the commitment
-    cursor.execute("UPDATE commitments SET status = 'cancelled' WHERE commitment_id = ?", (commitment_id,))
-    # If it was primary, promote a backup
-    if row['role'] == 'primary':
-        # Check if there is a backup
-        cursor.execute("SELECT commitment_id FROM commitments WHERE request_id = ? AND role = 'backup' AND status = 'active' ORDER BY created_at LIMIT 1", (row['request_id'],))
-        backup = cursor.fetchone()
-        if backup:
-            # Promote backup to primary
-            cursor.execute("UPDATE commitments SET role = 'primary' WHERE commitment_id = ?", (backup['commitment_id'],))
-        else:
-            # No backup, set request open
-            cursor.execute("UPDATE requests SET status = 'open' WHERE request_id = ?", (row['request_id'],))
-    db.commit()
+    
+    try:
+        cursor.execute("SELECT role, request_id FROM commitments WHERE commitment_id = ? AND volunteer_id = ? AND status = 'active'", (commitment_id, user['user_id']))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({'error': 'Commitment not found'}), 404
+            
+        # Cancel the commitment
+        cursor.execute("UPDATE commitments SET status = 'cancelled' WHERE commitment_id = ?", (commitment_id,))
+        
+        # If it was primary, promote a backup
+        if row['role'] == 'primary':
+            # Check if there is a backup
+            cursor.execute("SELECT commitment_id FROM commitments WHERE request_id = ? AND role = 'backup' AND status = 'active' ORDER BY created_at LIMIT 1", (row['request_id'],))
+            backup = cursor.fetchone()
+            if backup:
+                # Promote backup to primary
+                cursor.execute("UPDATE commitments SET role = 'primary' WHERE commitment_id = ?", (backup['commitment_id'],))
+            else:
+                # No backup, set request open
+                cursor.execute("UPDATE requests SET status = 'open' WHERE request_id = ?", (row['request_id'],))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'error': 'Failed to cancel commitment', 'details': str(e)}), 500
+        
     return jsonify({'message': 'Commitment cancelled'}), 200
+
