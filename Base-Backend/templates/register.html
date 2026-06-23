@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Register - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card p-4">
+      <h1 class="h3 fw-bold text-center mb-4">Create an Account</h1>
+      
+      <form id="register-form" novalidate enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="role" class="form-label">I am registering as a:</label>
+          <select class="form-select" id="role" name="role" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="student">Visually Impaired Student</option>
+            <option value="volunteer">Volunteer Scribe / Writer</option>
+            <option value="college">Educational Institution / College</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="name" class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="name" name="name" required autocomplete="name">
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email address</label>
+          <input type="email" class="form-control" id="email" name="email" required autocomplete="email">
+        </div>
+        
+        <div class="mb-3">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input type="tel" class="form-control" id="phone" name="phone" autocomplete="tel">
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required autocomplete="new-password">
+        </div>
+
+        <!-- Aadhaar dynamic section based on role in later phases -->
+        <div id="aadhaar-fields" class="d-none">
+          <div class="mb-3">
+            <label for="aadhaar" class="form-label">12-Digit Aadhaar Number</label>
+            <input type="text" class="form-control" id="aadhaar" name="aadhaar" maxlength="12" placeholder="e.g. 123456789012" aria-describedby="aadhaarHelp">
+            <div id="aadhaarHelp" class="form-text">Will be stored encrypted. Never shared publicly.</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="aadhaar_copy" class="form-label">Upload Aadhaar Photocopy (PDF/JPG/PNG, Max 5MB)</label>
+            <input type="file" class="form-control" id="aadhaar_copy" name="aadhaar_copy" accept=".pdf,.jpg,.jpeg,.png">
+          </div>
+        </div>
+
+        <div id="error-message" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">
+          <i class="fa-solid fa-user-plus me-2" aria-hidden="true"></i>Register
+        </button>
+      </form>
+      
+      <div class="text-center mt-4">
+        <p class="text-muted small">Already have an account? <a href="/login">Log In here</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const roleSelect = document.getElementById('role');
+    const aadhaarFields = document.getElementById('aadhaar-fields');
+    
+    roleSelect.addEventListener('change', () => {
+      const val = roleSelect.value;
+      if (val === 'student' || val === 'volunteer') {
+        aadhaarFields.classList.remove('d-none');
+        document.getElementById('aadhaar').setAttribute('required', 'required');
+        document.getElementById('aadhaar_copy').setAttribute('required', 'required');
+      } else {
+        aadhaarFields.classList.add('d-none');
+        document.getElementById('aadhaar').removeAttribute('required');
+        document.getElementById('aadhaar_copy').removeAttribute('required');
+      }
+    });
+  });
+</script>
+{% endblock %}

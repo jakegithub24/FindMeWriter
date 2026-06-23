@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FindMeWriter connects visually impaired students with volunteer writers for examinations, providing a reliable and accessible scribe booking network.">
+  <title>{% block title %}FindMeWriter - Accessibility-First Scribe Network{% endblock %}</title>
+
+  <!-- Google Fonts: Inter and Atkinson Hyperlegible -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Custom Site Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Early theme application script to prevent Flash of Unstyled Content (FOUC) -->
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('fmw-theme') || 'default';
+      const savedSize = localStorage.getItem('fmw-size') || 'default';
+      if (savedTheme === 'high-contrast') {
+        document.documentElement.setAttribute('data-theme', 'high-contrast');
+      }
+      if (savedSize === 'large-text') {
+        document.documentElement.setAttribute('data-size', 'large-text');
+      }
+    })();
+  </script>
+
+  {% block styles %}{% endblock %}
+</head>
+<body>
+  <!-- Accessible Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Accessible Navigation Bar -->
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3" aria-label="Main Navigation">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center fw-bold text-primary" href="/" style="font-size: 1.4rem;">
+          <i class="fa-solid fa-hands-helping me-2" aria-hidden="true"></i>
+          <span>FindMeWriter</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link px-3" href="/">Home</a>
+            </li>
+            {% if g.user %}
+              <li class="nav-item">
+                <a class="nav-link px-3" href="/dashboard">Dashboard</a>
+              </li>
+              {% if g.user.role == 'student' or g.user.role == 'college' %}
+                <li class="nav-item">
+                  <a class="nav-link px-3" href="/requests/new">Create Request</a>
+                </li>
+              {% endif %}
+            {% endif %}
+          </ul>
+
+          <!-- Accessibility and Auth Controls -->
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <!-- Accessibility Buttons -->
+            <div class="accessibility-controls" role="group" aria-label="Accessibility Settings">
+              <button id="toggle-contrast" class="btn btn-outline-secondary d-flex align-items-center" aria-pressed="false" title="Toggle High Contrast Mode">
+                <i class="fa-solid fa-circle-half-stroke me-1" aria-hidden="true"></i>
+                <span class="visually-hidden">Toggle High Contrast</span>
+                Contrast
+              </button>
+              <button id="toggle-size" class="btn btn-outline-secondary d-flex align-items-center" aria-pressed="false" title="Toggle Large Text Mode">
+                <i class="fa-solid fa-font me-1" aria-hidden="true"></i>
+                <span class="visually-hidden">Toggle Large Text</span>
+                Text Size
+              </button>
+            </div>
+
+            <!-- Authentication User Display / Links -->
+            <div class="d-flex align-items-center gap-2">
+              {% if g.user %}
+                <span class="navbar-text me-2">
+                  Hello, <strong>{{ g.user.name }}</strong>
+                  <span class="badge badge-role-{{ g.user.role }} ms-1" style="font-size: 0.8rem;">
+                    {{ g.user.role | capitalize }}
+                  </span>
+                </span>
+                <a href="/logout" class="btn btn-outline-primary">Logout</a>
+              {% else %}
+                <a href="/login" class="btn btn-outline-primary">Login</a>
+                <a href="/register" class="btn btn-primary">Register</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content Area -->
+  <main id="main-content" tabindex="-1">
+    <div class="container my-5">
+      <!-- Flash Messages Container -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div id="flash-alerts" class="mb-4">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer py-4 mt-auto">
+    <div class="container text-center text-md-start">
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+          <p class="mb-0 text-muted">&copy; 2026 FindMeWriter. Built with dignity and full accessibility compliance.</p>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <a href="/terms" class="text-muted me-3 text-decoration-none">Terms</a>
+          <a href="/privacy" class="text-muted text-decoration-none">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 Bundle JS (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+  <!-- Custom Site JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

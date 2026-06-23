@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-9 col-lg-8">
+    <div class="card p-4">
+      <h1 class="h2 fw-bold mb-4">Privacy Policy</h1>
+      <p class="text-muted">Last updated: June 24, 2026</p>
+      
+      <h2 class="h4 fw-bold mt-4">1. Data Collection and Usage</h2>
+      <p>We collect personal information necessary to connect students with volunteer writers. This includes name, email address, phone number, role, and Aadhaar card photocopies (for students and volunteers).</p>
+      
+      <h2 class="h4 fw-bold mt-4">2. Security and Encryption</h2>
+      <p>We prioritize security. Aadhaar numbers are stored as one-way SHA-256 hashes, and Aadhaar photocopies are encrypted using AES symmetric encryption (Fernet) before storage on our server disks. These files are served only to authorized institutional administrators for verification purposes.</p>
+      
+      <h2 class="h4 fw-bold mt-4">3. Data Retention</h2>
+      <p>Aadhaar copies are retained only as long as the user account is active, plus one year for archival audit requirements. Users may request logical deletion of their accounts at any time.</p>
+      
+      <div class="mt-4">
+        <a href="/" class="btn btn-primary">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app, g
 from models.db import get_db
 from middleware.auth import require_role, require_admin_mfa, get_current_user
-from middleware.audit import log_audit, get_audit_logs, verify_audit_chain
+from middleware.audit import audit, log_audit, get_audit_logs, verify_audit_chain
 from utils.exporters import export_csv, export_json
 from io import StringIO
 from datetime import datetime

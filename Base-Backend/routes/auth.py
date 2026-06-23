@@ -3,7 +3,7 @@ import hashlib
 from flask import Blueprint, request, jsonify, current_app, g
 from werkzeug.utils import secure_filename
 from models.db import get_db
-from middleware.auth import hash_password, check_password, create_tokens, require_role, get_current_user
+from middleware.auth import hash_password, check_password, create_tokens, verify_token, require_role, get_current_user
 from middleware.encryption import encrypt_file
 from middleware.audit import log_audit
 from middleware.validators import validate_aadhaar

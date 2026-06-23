@@ -1,0 +1,45 @@
+name: FindMeWriter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-gauge: '3.12'
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools
+        pip install -r Base-Backend/requirements.txt
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 Base-Backend --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 Base-Backend --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run tests with pytest
+      env:
+        FLASK_ENV: testing
+        SECRET_KEY: test-secret-key-12345
+        JWT_SECRET_KEY: test-jwt-secret-key-12345
+        ENCRYPTION_KEY: elhXbcx515t3rlDeBZdVTyd7qUoc8fmMjBm6cvn4I-M=
+        ADMIN_TOTP_SECRET: admin-mfa-secret-base32value32
+        DATABASE_URL: sqlite:///test.db
+      run: |
+        PYTHONPATH=Base-Backend pytest Base-Backend

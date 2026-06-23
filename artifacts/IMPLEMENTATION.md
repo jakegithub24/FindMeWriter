@@ -6,11 +6,11 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 ## 2. Phase Breakdown
 
 ### Phase 0: Foundation (Week 1)
-- [ ] Initialize GitHub repo with GPL v3.0 license, README, CONTRIBUTING.md, CODE_OF_CONDUCT.md
-- [ ] Set up Flask app factory, config classes, and SQLite connection
-- [ ] Implement base Jinja2 template with Bootstrap 5, theme toggle, skip links
-- [ ] Write `schema.sql` and `db.py` with initialization CLI
-- [ ] Set up GitHub Actions CI (lint, basic test runner)
+- [x] Set up Flask app factory, config classes, and SQLite connection
+- [x] Implement base Jinja2 template with Bootstrap 5, theme toggle, skip links
+- [x] Write `schema.sql` and `db.py` with initialization CLI
+- [x] Set up GitHub Actions CI (lint, basic test runner)
+
 
 ### Phase 1: Authentication & Identity (Week 2)
 - [ ] Role-based registration with file upload (Aadhaar encryption)

@@ -134,14 +134,15 @@ CREATE TABLE IF NOT EXISTS helpdesk_messages (
 );
 
 -- Indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_status ON users(status);
-CREATE INDEX idx_requests_status ON requests(status);
-CREATE INDEX idx_requests_date ON requests(date);
-CREATE INDEX idx_commitments_volunteer ON commitments(volunteer_id);
-CREATE INDEX idx_commitments_request ON commitments(request_id);
-CREATE INDEX idx_verifications_request ON verifications(request_id);
-CREATE INDEX idx_complaints_status ON complaints(status);
-CREATE INDEX idx_audit_logs_actor ON audit_logs(actor_id);
-CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
-CREATE INDEX idx_helpdesk_room ON helpdesk_messages(room_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+CREATE INDEX IF NOT EXISTS idx_requests_status ON requests(status);
+CREATE INDEX IF NOT EXISTS idx_requests_date ON requests(date);
+CREATE INDEX IF NOT EXISTS idx_commitments_volunteer ON commitments(volunteer_id);
+CREATE INDEX IF NOT EXISTS idx_commitments_request ON commitments(request_id);
+CREATE INDEX IF NOT EXISTS idx_verifications_request ON verifications(request_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_helpdesk_room ON helpdesk_messages(room_id);
+

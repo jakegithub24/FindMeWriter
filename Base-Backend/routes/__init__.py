@@ -9,6 +9,7 @@ def register_blueprints(app):
     from .complaints import complaints_bp
     from .helpdesk import helpdesk_bp
     from .shared import shared_bp
+    from .web import web_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(student_bp, url_prefix='/api/student')
@@ -18,3 +19,5 @@ def register_blueprints(app):
     app.register_blueprint(complaints_bp, url_prefix='/api/complaints')
     app.register_blueprint(helpdesk_bp, url_prefix='/api/helpdesk')
     app.register_blueprint(shared_bp, url_prefix='/api')
+    app.register_blueprint(web_bp, url_prefix='/')
+

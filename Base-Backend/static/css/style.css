@@ -1,0 +1,158 @@
+/* Global Styles & Variables */
+:root {
+  --color-primary: #0056b3;
+  --color-primary-hover: #003d80;
+  --color-success: #2e7d32;
+  --color-warning: #ed6c02;
+  --color-danger: #d32f2f;
+  --color-surface: #ffffff;
+  --color-background: #f8f9fa;
+  --color-text: #212121;
+  --color-text-muted: #6c757d;
+  --color-border: #dee2e6;
+  
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-base: 1rem; /* 16px */
+  --line-height-base: 1.5;
+  --focus-outline-color: var(--color-primary);
+  --btn-padding-y: 0.375rem;
+  --btn-padding-x: 0.75rem;
+}
+
+/* High-Contrast Theme */
+[data-theme="high-contrast"] {
+  --color-primary: #005a9c;
+  --color-primary-hover: #003d80;
+  --color-success: #1b5e20;
+  --color-warning: #e65100;
+  --color-danger: #b71c1c;
+  --color-surface: #ffffff;
+  --color-background: #ffffff;
+  --color-text: #000000;
+  --color-text-muted: #333333;
+  --color-border: #000000;
+  --focus-outline-color: #000000;
+  
+  --font-family-base: 'Atkinson Hyperlegible', var(--font-family-base);
+}
+
+/* Apply 2px solid border in high contrast mode for key elements */
+[data-theme="high-contrast"] .card,
+[data-theme="high-contrast"] .btn,
+[data-theme="high-contrast"] .form-control,
+[data-theme="high-contrast"] .form-select,
+[data-theme="high-contrast"] .navbar {
+  border: 2px solid var(--color-border) !important;
+}
+
+/* Large-Text Theme */
+[data-size="large-text"] {
+  --font-size-base: 1.125rem; /* 18px */
+  --line-height-base: 1.6;
+  --btn-padding-y: 0.6rem;
+  --btn-padding-x: 1rem;
+}
+
+/* Base resets & styles using design system tokens */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.2s, color 0.2s, font-size 0.2s;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+footer {
+  flex-shrink: 0;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Accessibly designed focus indicators */
+*:focus-visible {
+  outline: 3px solid var(--focus-outline-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* Skip link styling */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 20px;
+  z-index: 1050;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Accessible minimum touch targets */
+.btn, .nav-link, .form-control, .form-select, [role="button"] {
+  min-height: 44px; /* Default minimum */
+}
+
+[data-size="large-text"] .btn,
+[data-size="large-text"] .nav-link,
+[data-size="large-text"] .form-control,
+[data-size="large-text"] .form-select,
+[data-size="large-text"] [role="button"] {
+  min-height: 48px; /* High accessibility minimum */
+}
+
+/* Custom premium card design */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.10);
+}
+
+[data-theme="high-contrast"] .card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Theme toggle controls container */
+.accessibility-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Role Badges colors matching roles */
+.badge-role-student {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+.badge-role-volunteer {
+  background-color: var(--color-success);
+  color: #fff;
+}
+.badge-role-college {
+  background-color: var(--color-warning);
+  color: #fff;
+}
+.badge-role-admin {
+  background-color: var(--color-danger);
+  color: #fff;
+}

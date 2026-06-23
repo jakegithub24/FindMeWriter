@@ -8,9 +8,9 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 | ID | Task | Owner | Status | Notes |
 |----|------|-------|--------|-------|
 | S1-01 | Repo setup: License, README, CoC, Contributing | — | 🟡 | |
-| S1-02 | Flask app factory + config.py | — | 🟡 | |
-| S1-03 | SQLite schema + db.py + init CLI | — | 🟡 | |
-| S1-04 | Base template + Bootstrap + themes | — | 🟡 | |
+| S1-02 | Flask app factory + config.py | — | 🔵 | |
+| S1-03 | SQLite schema + db.py + init CLI | — | 🔵 | |
+| S1-04 | Base template + Bootstrap + themes | — | 🔵 | |
 | S1-05 | Aadhaar encryption middleware | — | 🟡 | |
 | S1-06 | Public ID generator utility | — | 🟡 | |
 | S1-07 | Registration (all roles) + file upload | — | 🟡 | |
@@ -87,7 +87,7 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 ## Overall Progress
 - **Total Tasks**: 42
-- **Complete**: 0
+- **Complete**: 3
 - **In Progress**: 0
-- **Not Started**: 42
+- **Not Started**: 39
 - **Blocked**: 0

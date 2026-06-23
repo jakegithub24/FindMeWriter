@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="p-5 mb-4 bg-white rounded-3 border">
+      <div class="container-fluid py-2">
+        <h1 class="display-6 fw-bold text-primary">Welcome, {{ g.user.name }}!</h1>
+        <p class="col-md-8 fs-5 text-muted">You are logged in as a <strong>{{ g.user.role | capitalize }}</strong>. Your dashboard features will appear here as features are unlocked.</p>
+        <hr class="my-4">
+        <div class="row g-4 mt-2">
+          <div class="col-md-4">
+            <div class="card p-3 border-primary">
+              <h2 class="h5 fw-bold"><i class="fa-solid fa-folder-open text-primary me-2"></i>My Requests</h2>
+              <p class="text-muted small">View, edit, or track active exam support requests.</p>
+              <button class="btn btn-sm btn-outline-primary mt-2" disabled>View Requests (Coming Soon)</button>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card p-3 border-success">
+              <h2 class="h5 fw-bold"><i class="fa-solid fa-address-card text-success me-2"></i>Profile Settings</h2>
+              <p class="text-muted small">Update your accessibility options, contact info, and preferences.</p>
+              <button class="btn btn-sm btn-outline-success mt-2" disabled>Edit Profile (Coming Soon)</button>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card p-3 border-warning">
+              <h2 class="h5 fw-bold"><i class="fa-solid fa-headset text-warning me-2"></i>Help Desk</h2>
+              <p class="text-muted small">Chat with support volunteers in real-time or log issue tickets.</p>
+              <button class="btn btn-sm btn-outline-warning mt-2" disabled>Open Chat (Coming Soon)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

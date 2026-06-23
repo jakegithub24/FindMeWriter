@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 from models.db import get_db
 from middleware.auth import require_role, get_current_user
-from middleware.audit import audit
+from middleware.audit import audit, log_audit
 from middleware.validators import validate_public_id
 
 complaints_bp = Blueprint('complaints', __name__)
