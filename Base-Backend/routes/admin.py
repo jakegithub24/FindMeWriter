@@ -95,7 +95,7 @@ def export():
     elif export_type == 'complaints':
         cursor.execute("SELECT * FROM complaints")
     elif export_type == 'audit':
-        cursor.execute("SELECT * FROM audit_logs ORDER BY log_id")
+        cursor.execute("SELECT log_id, action, actor_id, actor_role, target_id, details_json, CAST(timestamp AS TEXT) as timestamp, hash FROM audit_logs ORDER BY log_id")
     rows = cursor.fetchall()
     data_list = [dict(row) for row in rows]
     if format_type == 'csv':

@@ -154,3 +154,45 @@ def create_bulk_requests():
         
     return jsonify({'message': f'{len(inserted_ids)} requests created', 'request_ids': inserted_ids}), 201
 
+@college_bp.route('/aadhaar/<volunteer_id>', methods=['GET'])
+@require_role('college')
+def get_volunteer_aadhaar(volunteer_id):
+    import os
+    import tempfile
+    from flask import make_response
+    from middleware.encryption import decrypt_file
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT aadhaar_copy_path FROM volunteers WHERE volunteer_id = ?", (volunteer_id,))
+    row = cursor.fetchone()
+    if not row:
+        return jsonify({'error': 'Volunteer not found'}), 404
+        
+    encrypted_path = row['aadhaar_copy_path']
+    if not os.path.exists(encrypted_path):
+        return jsonify({'error': 'Aadhaar file not found on server'}), 404
+        
+    temp_dir = tempfile.gettempdir()
+    decrypted_path = os.path.join(temp_dir, f"dec_{volunteer_id}")
+    try:
+        decrypt_file(encrypted_path, decrypted_path)
+        mimetype = 'application/pdf'
+        if encrypted_path.endswith('.jpg.enc') or encrypted_path.endswith('.jpeg.enc'):
+            mimetype = 'image/jpeg'
+        elif encrypted_path.endswith('.png.enc'):
+            mimetype = 'image/png'
+            
+        with open(decrypted_path, 'rb') as f:
+            file_data = f.read()
+        os.remove(decrypted_path)
+        
+        response = make_response(file_data)
+        response.headers.set('Content-Type', mimetype)
+        return response
+    except Exception as e:
+        if os.path.exists(decrypted_path):
+            os.remove(decrypted_path)
+        return jsonify({'error': 'Failed to decrypt Aadhaar file', 'details': str(e)}), 500
+
+

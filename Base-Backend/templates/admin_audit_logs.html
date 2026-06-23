@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log Viewer - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+  <div class="col-md-7">
+    <h1 class="h2 fw-bold text-primary mb-1">
+      <i class="fa-solid fa-clock-rotate-left me-2"></i>Audit Log Viewer
+    </h1>
+    <p class="text-muted">Security and system activity tracking with tamper-evident cryptographic hash chains.</p>
+  </div>
+  
+  <div class="col-md-5 text-md-end mt-3 mt-md-0">
+    {% if chain_valid %}
+      <span class="badge bg-success p-2 fs-6 border border-2 border-success text-white shadow-sm d-inline-flex align-items-center">
+        <i class="fa-solid fa-shield-halved me-2"></i>Tamper-Evident Chain Verified
+      </span>
+    {% else %}
+      <span class="badge bg-danger p-2 fs-6 border border-2 border-danger text-white shadow-sm d-inline-flex align-items-center" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2 fa-beat"></i>AUDIT CHAIN TAMPERING DETECTED
+      </span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card p-3 mb-4 bg-light">
+  <form class="row g-3 align-items-end" method="GET">
+    <div class="col-md-4">
+      <label for="action" class="form-label small fw-bold">Action Type</label>
+      <input type="text" class="form-control" id="action" name="action" placeholder="e.g. LOGIN, USER_SUSPENDED" value="{{ action_filter }}">
+    </div>
+    
+    <div class="col-md-4">
+      <label for="actor_id" class="form-label small fw-bold">Actor User ID</label>
+      <input type="number" class="form-control" id="actor_id" name="actor_id" placeholder="e.g. 1" value="{{ actor_filter }}">
+    </div>
+    
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-50">
+        <i class="fa-solid fa-filter me-1"></i>Apply Filters
+      </button>
+      <a href="/admin/audit-logs" class="btn btn-outline-secondary w-50">Clear Filters</a>
+    </div>
+  </form>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="card p-4">
+  {% if logs %}
+    <div class="table-responsive">
+      <table class="table align-middle table-hover">
+        <caption class="visually-hidden">System audit logs showing security events and hash chains</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Actor (Role)</th>
+            <th scope="col">Action</th>
+            <th scope="col">Context Details</th>
+            <th scope="col">Cryptographic Hash</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td><code>#{{ log.log_id }}</code></td>
+              <td>
+                <span class="small font-monospace">{{ log.timestamp }}</span>
+              </td>
+              <td>
+                <strong>User #{{ log.actor_id or 'System' }}</strong><br>
+                <span class="badge badge-role-{{ log.actor_role }} small">{{ log.actor_role | capitalize }}</span>
+              </td>
+              <td>
+                <span class="badge bg-dark">{{ log.action }}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary view-context-btn" 
+                        data-context='{{ log.details_json }}'
+                        data-bs-toggle="modal" 
+                        data-bs-target="#contextModal"
+                        aria-label="View context for log entry #{{ log.log_id }}">
+                  View Details
+                </button>
+              </td>
+              <td>
+                <span class="small text-muted font-monospace" title="{{ log.hash }}">
+                  {{ log.hash[:16] }}...
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fa-solid fa-folder-open fa-3x mb-3"></i>
+      <p class="mb-0">No audit logs found matching your filters.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="contextModal" tabindex="-1" aria-labelledby="contextModalTitle" aria-hidden="true" role="dialog">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5 fw-bold text-primary" id="contextModalTitle">Audit Event Context Details</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bg-light">
+        <pre id="modal-context-pre" class="p-3 border rounded text-dark font-monospace" style="font-size: 0.85rem; max-height: 450px; overflow-y: auto;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const contextModal = document.getElementById('contextModal');
+    const preContainer = document.getElementById('modal-context-pre');
+
+    contextModal.addEventListener('show.bs.modal', (event) => {
+      const button = event.relatedTarget;
+      const contextStr = button.getAttribute('data-context');
+      
+      try {
+        const obj = JSON.parse(contextStr);
+        preContainer.textContent = JSON.stringify(obj, null, 2);
+      } catch (err) {
+        preContainer.textContent = contextStr;
+      }
+    });
+  });
+</script>
+{% endblock %}

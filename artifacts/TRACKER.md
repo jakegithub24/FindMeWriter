@@ -35,12 +35,12 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 | ID | Task | Owner | Status | Notes |
 |----|------|-------|--------|-------|
-| S3-01 | Verification queue UI (side-by-side) | — | 🟡 | |
-| S3-02 | Verification logging endpoint | — | 🟡 | |
-| S3-03 | Attendance marking UI | — | 🟡 | |
-| S3-04 | Audit log decorator + hash chain | — | 🟡 | |
-| S3-05 | Admin audit viewer + filters | — | 🟡 | |
-| S3-06 | Export audit logs (CSV/JSON) | — | 🟡 | |
+| S3-01 | Verification queue UI (side-by-side) | — | 🔵 | |
+| S3-02 | Verification logging endpoint | — | 🔵 | |
+| S3-03 | Attendance marking UI | — | 🔵 | |
+| S3-04 | Audit log decorator + hash chain | — | 🔵 | |
+| S3-05 | Admin audit viewer + filters | — | 🔵 | |
+| S3-06 | Export audit logs (CSV/JSON) | — | 🔵 | |
 
 ## Sprint 4: Complaints & Moderation (Week 5)
 
@@ -87,7 +87,7 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 ## Overall Progress
 - **Total Tasks**: 42
-- **Complete**: 17
+- **Complete**: 23
 - **In Progress**: 0
-- **Not Started**: 25
+- **Not Started**: 19
 - **Blocked**: 0

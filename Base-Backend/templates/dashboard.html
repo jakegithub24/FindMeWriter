@@ -302,6 +302,84 @@
           <i class="fa-solid fa-upload me-1"></i>Post Bulk Requests
         </button>
       </form>
+  </div>
+</div>
+
+<div class="row g-4 mt-4">
+  <!-- Verification Queue Banner -->
+  <div class="col-12">
+    <div class="card p-4 border-primary bg-primary bg-opacity-10 d-flex flex-row align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h3 class="h5 fw-bold text-primary mb-1"><i class="fa-solid fa-user-shield me-2"></i>Arriving Scribes Verification</h3>
+        <p class="text-muted small mb-0">Verify the identity of arriving scribes against their uploaded documents before marking attendance.</p>
+      </div>
+      <a href="/verification-queue" class="btn btn-primary">
+        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Go to Verification Queue
+      </a>
+    </div>
+  </div>
+
+  <!-- Verified Scribes & Attendance -->
+  <div class="col-12">
+    <div class="card p-4">
+      <h3 class="h5 fw-bold mb-4">
+        <i class="fa-solid fa-circle-check text-success me-2"></i>Verified Scribes & Scribe Attendance
+      </h3>
+
+      {% if data.verified_volunteers %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <caption class="visually-hidden">List of verified scribes and their examination attendance logs</caption>
+            <thead>
+              <tr>
+                <th scope="col">Exam Details</th>
+                <th scope="col">Location</th>
+                <th scope="col">Scribe Name</th>
+                <th scope="col">Attendance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in data.verified_volunteers %}
+                <tr>
+                  <td>
+                    <strong>{{ item.date }}</strong><br>
+                    <small class="text-muted">{{ item.time }}</small>
+                  </td>
+                  <td>{{ item.location }}</td>
+                  <td>{{ item.volunteer_name }}</td>
+                  <td>
+                    {% if item.attendance_status %}
+                      <span class="badge bg-{{ 'success' if item.attendance_status == 'present' else 'danger' }} p-2">
+                        {{ item.attendance_status | capitalize }}
+                      </span>
+                    {% else %}
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-success mark-attendance-btn" 
+                                data-request-id="{{ item.request_id }}" 
+                                data-volunteer-id="{{ item.volunteer_user_id }}" 
+                                data-status="present">
+                          Mark Present
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger mark-attendance-btn" 
+                                data-request-id="{{ item.request_id }}" 
+                                data-volunteer-id="{{ item.volunteer_user_id }}" 
+                                data-status="absent">
+                          Mark Absent
+                        </button>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fa-solid fa-clipboard-question fa-2x mb-2"></i>
+          <p class="mb-0">No verified scribes available for attendance marking yet. Perform verification first.</p>
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -434,6 +512,43 @@
         }
       });
     }
+
+    // 4. Scribe Attendance Marking Handlers
+    document.querySelectorAll('.mark-attendance-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const requestId = btn.getAttribute('data-request-id');
+        const volunteerId = btn.getAttribute('data-volunteer-id');
+        const status = btn.getAttribute('data-status');
+        alertBox.classList.add('d-none');
+
+        try {
+          const token = getCookie('access_token');
+          const response = await fetch('/api/college/attendance', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              request_id: parseInt(requestId, 10),
+              volunteer_id: parseInt(volunteerId, 10),
+              status: status
+            })
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            showAlert('success', `Attendance marked as ${status} successfully!`);
+            setTimeout(() => { window.location.reload(); }, 1500);
+          } else {
+            showAlert('danger', data.error || 'Failed to mark attendance.');
+          }
+        } catch (err) {
+          console.error(err);
+          showAlert('danger', 'A network error occurred.');
+        }
+      });
+    });
   });
 </script>
 {% endblock %}

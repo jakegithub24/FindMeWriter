@@ -10,18 +10,20 @@ def audit(action, target_id=None):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            # Execute the function first to capture any changes
             result = f(*args, **kwargs)
-            # Log after successful execution (or we can log before, but after ensures we have outcome)
-            # We'll log regardless, but we need to capture actor from request context.
-            # We'll use g.user set in auth middleware.
-            actor_id = getattr(g, 'user_id', None)
-            actor_role = getattr(g, 'user_role', 'unknown')
-            if not actor_id:
-                # If no user, maybe system?
-                actor_id = 0  # system? but we need to handle.
-                pass
-            # Get details
+            
+            # Retrieve actor from g.user or auth middleware
+            user = getattr(g, 'user', None)
+            if not user:
+                try:
+                    from middleware.auth import get_current_user
+                    user = get_current_user()
+                except Exception:
+                    user = None
+                    
+            actor_id = user.get('user_id') if user else 0
+            actor_role = user.get('role') if user else 'unknown'
+            
             details = {
                 'endpoint': request.endpoint,
                 'method': request.method,
@@ -31,8 +33,6 @@ def audit(action, target_id=None):
                 'json': request.get_json(silent=True) or {},
                 'status_code': getattr(result, 'status_code', 200) if hasattr(result, 'status_code') else 200
             }
-            # If target_id is dynamic, maybe passed as arg? We can compute.
-            # For simplicity, we'll use the provided target_id or None.
             log_audit(actor_id, actor_role, action, target_id, details)
             return result
         return wrapped
@@ -41,24 +41,25 @@ def audit(action, target_id=None):
 def log_audit(actor_id, actor_role, action, target_id, details_json):
     db = get_db()
     cursor = db.cursor()
-    # Get previous hash for chain
     cursor.execute("SELECT hash FROM audit_logs ORDER BY log_id DESC LIMIT 1")
     row = cursor.fetchone()
     prev_hash = row['hash'] if row else ''
     details_str = json.dumps(details_json, default=str)
-    hash_input = prev_hash + details_str + str(datetime.utcnow().timestamp())
+    # Use identical datetime format for both recording and verification
+    timestamp_str = datetime.utcnow().isoformat()
+    hash_input = prev_hash + details_str + timestamp_str
     current_hash = hashlib.sha256(hash_input.encode()).hexdigest()
     cursor.execute(
         """INSERT INTO audit_logs (action, actor_id, actor_role, target_id, details_json, timestamp, hash)
            VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (action, actor_id, actor_role, target_id, details_str, datetime.utcnow().isoformat(), current_hash)
+        (action, actor_id, actor_role, target_id, details_str, timestamp_str, current_hash)
     )
     db.commit()
 
 def get_audit_logs(filters=None, limit=20, offset=0):
     db = get_db()
     cursor = db.cursor()
-    query = "SELECT * FROM audit_logs"
+    query = "SELECT log_id, action, actor_id, actor_role, target_id, details_json, CAST(timestamp AS TEXT) as timestamp, hash FROM audit_logs"
     params = []
     if filters:
         conditions = []
@@ -84,7 +85,7 @@ def get_audit_logs(filters=None, limit=20, offset=0):
 def verify_audit_chain():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT log_id, hash, details_json, timestamp FROM audit_logs ORDER BY log_id")
+    cursor.execute("SELECT log_id, hash, details_json, CAST(timestamp AS TEXT) as timestamp FROM audit_logs ORDER BY log_id")
     rows = cursor.fetchall()
     prev_hash = ''
     valid = True

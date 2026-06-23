@@ -30,12 +30,12 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 - [x] **Milestone**: End-to-end request matching works
 
 ### Phase 3: Verification & Audit (Week 4)
-- [ ] College verification queue UI (side-by-side Aadhaar comparison)
-- [ ] Verification logging endpoint
-- [ ] Attendance marking (Present/Absent)
-- [ ] Audit log decorator and hash chain implementation
-- [ ] Admin audit log viewer with filtering
-- [ ] **Milestone**: Verification and attendance are tamper-evident
+- [x] College verification queue UI (side-by-side Aadhaar comparison)
+- [x] Verification logging endpoint
+- [x] Attendance marking (Present/Absent)
+- [x] Audit log decorator and hash chain implementation
+- [x] Admin audit log viewer with filtering
+- [x] **Milestone**: Verification and attendance are tamper-evident
 
 ### Phase 4: ComplaintBox & Moderation (Week 5)
 - [ ] Complaint submission with target ID validation

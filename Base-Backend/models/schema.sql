@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     actor_role TEXT NOT NULL,
     target_id INTEGER,
     details_json TEXT NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
     hash TEXT NOT NULL
 );
 

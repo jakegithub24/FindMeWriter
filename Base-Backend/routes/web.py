@@ -112,6 +112,19 @@ def dashboard():
         )
         data['requests'] = [dict(row) for row in cursor.fetchall()]
         
+        # Get verified volunteers for attendance marking
+        cursor.execute(
+            """SELECT v.verification_id, r.request_id, r.date, r.time, r.location, u.name as volunteer_name, u.id as volunteer_user_id,
+               (SELECT status FROM attendance_logs WHERE request_id = r.request_id AND volunteer_id = u.id LIMIT 1) as attendance_status
+               FROM verifications v
+               JOIN requests r ON v.request_id = r.request_id
+               JOIN users u ON v.volunteer_id = u.id
+               WHERE r.created_by = ?""",
+            (g.user['user_id'],)
+        )
+        data['verified_volunteers'] = [dict(row) for row in cursor.fetchall()]
+
+        
     return render_template('dashboard.html', data=data)
 
 @web_bp.route('/requests/new', methods=['GET'])
@@ -169,4 +182,62 @@ def terms():
 @web_bp.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+@web_bp.route('/verification-queue')
+def verification_queue():
+    if not g.user or g.user['role'] != 'college':
+        return redirect(url_for('web.login'))
+        
+    from models.db import get_db
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        """SELECT r.request_id, r.date, r.time, r.location, r.language, v.volunteer_id, c.volunteer_id as volunteer_user_id, u.name as volunteer_name, c.role as commitment_role
+           FROM requests r
+           JOIN commitments c ON r.request_id = c.request_id
+           JOIN volunteers v ON c.volunteer_id = v.user_id
+           JOIN users u ON v.user_id = u.id
+           WHERE r.created_by = ? AND r.status IN ('filled','completed')
+           AND NOT EXISTS (SELECT 1 FROM verifications WHERE request_id = r.request_id AND volunteer_id = v.user_id)""",
+        (g.user['user_id'],)
+    )
+    queue = [dict(row) for row in cursor.fetchall()]
+    return render_template('verification_queue.html', queue=queue)
+
+@web_bp.route('/admin/audit-logs')
+def admin_audit_logs():
+    if not g.user or g.user['role'] != 'admin':
+        return redirect(url_for('web.login'))
+        
+    from models.db import get_db
+    db = get_db()
+    cursor = db.cursor()
+    
+    action_filter = request.args.get('action', '')
+    actor_filter = request.args.get('actor_id', '')
+    
+    query = "SELECT log_id, action, actor_id, actor_role, target_id, details_json, CAST(timestamp AS TEXT) as timestamp, hash FROM audit_logs"
+    params = []
+    conditions = []
+    if action_filter:
+        conditions.append("action = ?")
+        params.append(action_filter)
+    if actor_filter:
+        conditions.append("actor_id = ?")
+        params.append(actor_filter)
+        
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+        
+    query += " ORDER BY log_id DESC LIMIT 100"
+    
+    cursor.execute(query, params)
+    logs = [dict(row) for row in cursor.fetchall()]
+    
+    from middleware.audit import verify_audit_chain
+    chain_valid = verify_audit_chain()
+    
+    return render_template('admin_audit_logs.html', logs=logs, chain_valid=chain_valid, action_filter=action_filter, actor_filter=actor_filter)
+
+
 

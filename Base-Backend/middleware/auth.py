@@ -2,7 +2,7 @@ import jwt
 import bcrypt
 import pyotp
 from functools import wraps
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, g
 from datetime import datetime, timedelta
 from models.db import get_db
 
@@ -31,6 +31,8 @@ def verify_token(token):
         return None
 
 def get_current_user():
+    if getattr(g, 'user', None):
+        return g.user
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
@@ -38,7 +40,9 @@ def get_current_user():
     payload = verify_token(token)
     if not payload:
         return None
+    g.user = payload
     return payload
+
 
 def require_role(role):
     def decorator(f):

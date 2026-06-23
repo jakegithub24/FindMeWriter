@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Verification Queue - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h1 class="h2 fw-bold text-primary mb-1">
+      <i class="fa-solid fa-user-shield me-2"></i>Scribe Verification Queue
+    </h1>
+    <p class="text-muted">Compare the physically presented Aadhaar card of the arriving volunteer with the encrypted copy uploaded during registration.</p>
+  </div>
+</div>
+
+<div id="status-alert" class="alert d-none mb-4" role="alert" aria-live="polite"></div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card p-4">
+      {% if queue %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <caption class="visually-hidden">List of volunteers awaiting credentials verification upon arrival</caption>
+            <thead>
+              <tr>
+                <th scope="col">Exam Date & Time</th>
+                <th scope="col">Scribe Name</th>
+                <th scope="col">Public ID</th>
+                <th scope="col">Assigned Role</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in queue %}
+                <tr>
+                  <td>
+                    <strong>{{ item.date }}</strong><br>
+                    <small class="text-muted">{{ item.time }}</small>
+                  </td>
+                  <td>{{ item.volunteer_name }}</td>
+                  <td><code>{{ item.volunteer_id }}</code></td>
+                  <td>
+                    <span class="badge bg-{{ 'success' if item.commitment_role == 'primary' else 'info' }}">
+                      {{ item.commitment_role | capitalize }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-primary verify-btn" 
+                            data-request-id="{{ item.request_id }}"
+                            data-volunteer-id="{{ item.volunteer_id }}"
+                            data-volunteer-user-id="{{ item.volunteer_user_id }}"
+                            data-volunteer-name="{{ item.volunteer_name }}"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#verificationModal"
+                            aria-label="Verify {{ item.volunteer_name }}">
+                      <i class="fa-solid fa-magnifying-glass-chart me-1"></i>Verify Scribe
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-clipboard-check fa-3x mb-3"></i>
+          <p class="mb-0">All arriving scribes have been verified. No pending items in the queue.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Side-by-Side Verification Modal -->
+<div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" role="dialog">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5 fw-bold text-primary" id="modalTitle">Compare Scribe Verification Details</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <!-- Left Panel: Uploaded Aadhaar Photocopy -->
+          <div class="col-lg-6 border-end">
+            <h3 class="h6 fw-bold mb-3"><i class="fa-solid fa-file-image me-1"></i>Uploaded Aadhaar Copy</h3>
+            <div class="bg-light border rounded p-3 text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 350px;">
+              <div id="aadhaar-preview-container" class="w-100">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-muted"></i>
+                <p class="text-muted small">Loading decrypted Aadhaar document...</p>
+              </div>
+              <a id="aadhaar-download-link" href="#" target="_blank" class="btn btn-outline-secondary btn-sm mt-3 d-none">
+                <i class="fa-solid fa-download me-1"></i>Open File in New Tab
+              </a>
+            </div>
+          </div>
+
+          <!-- Right Panel: Verification Fields -->
+          <div class="col-lg-6">
+            <h3 class="h6 fw-bold mb-3"><i class="fa-solid fa-user-check me-1"></i>Verify Volunteer</h3>
+            <form id="verify-form" novalidate>
+              <input type="hidden" id="modal-request-id">
+              <input type="hidden" id="modal-volunteer-id">
+              <input type="hidden" id="modal-volunteer-user-id">
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Scribe Name</label>
+                <input type="text" class="form-control bg-light" id="modal-volunteer-name" readonly>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check form-switch p-3 bg-light rounded border">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" id="physical-match" required>
+                  <label class="form-check-label fw-bold" for="physical-match">The physical Aadhaar matches the uploaded photocopy</label>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="verification-notes" class="form-label fw-bold">Verification Notes (Optional)</label>
+                <textarea class="form-control" id="verification-notes" rows="4" placeholder="Enter any discrepancy details, verification comments, or remarks..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="fa-solid fa-check-double me-1"></i>Submit Verification Record
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('verificationModal');
+    const alertBox = document.getElementById('status-alert');
+    const form = document.getElementById('verify-form');
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Modal show event listener
+    modal.addEventListener('show.bs.modal', async (event) => {
+      const button = event.relatedTarget;
+      const requestId = button.getAttribute('data-request-id');
+      const volunteerId = button.getAttribute('data-volunteer-id');
+      const volunteerUserId = button.getAttribute('data-volunteer-user-id');
+      const volunteerName = button.getAttribute('data-volunteer-name');
+
+      // Update modal inputs
+      document.getElementById('modal-request-id').value = requestId;
+      document.getElementById('modal-volunteer-id').value = volunteerId;
+      document.getElementById('modal-volunteer-user-id').value = volunteerUserId;
+      document.getElementById('modal-volunteer-name').value = volunteerName;
+
+      // Reset form controls
+      document.getElementById('physical-match').checked = false;
+      document.getElementById('verification-notes').value = '';
+
+      // Initialize Preview
+      const previewContainer = document.getElementById('aadhaar-preview-container');
+      const downloadLink = document.getElementById('aadhaar-download-link');
+      previewContainer.innerHTML = `
+        <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2 text-muted"></i>
+        <p class="text-muted small">Loading decrypted Aadhaar document...</p>
+      `;
+      downloadLink.classList.add('d-none');
+
+      try {
+        const token = getCookie('access_token');
+        // Fetch decrypted Aadhaar file from API
+        const response = await fetch(`/api/college/aadhaar/${volunteerId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          if (blob.type.startsWith('image/')) {
+            previewContainer.innerHTML = `<img src="${objectUrl}" alt="Aadhaar photocopy preview" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;">`;
+          } else {
+            previewContainer.innerHTML = `
+              <i class="fa-solid fa-file-pdf fa-4x text-danger mb-3"></i>
+              <p class="mb-0 text-muted">Aadhaar copy is a PDF document.</p>
+            `;
+          }
+          downloadLink.href = objectUrl;
+          downloadLink.classList.remove('d-none');
+        } else {
+          previewContainer.innerHTML = `
+            <i class="fa-solid fa-triangle-exclamation fa-3x text-danger mb-2"></i>
+            <p class="text-danger small mb-0">Failed to load Aadhaar file.</p>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        previewContainer.innerHTML = `
+          <i class="fa-solid fa-wifi-slash fa-3x text-danger mb-2"></i>
+          <p class="text-danger small mb-0">Network error retrieving document.</p>
+        `;
+      }
+    });
+
+    // Verification submit handler
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('d-none');
+
+      const payload = {
+        request_id: parseInt(document.getElementById('modal-request-id').value, 10),
+        volunteer_id: parseInt(document.getElementById('modal-volunteer-user-id').value, 10),
+        physical_match: document.getElementById('physical-match').checked,
+        notes: document.getElementById('verification-notes').value
+      };
+
+      try {
+        const token = getCookie('access_token');
+        const response = await fetch('/api/college/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        
+        // Hide modal
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+
+        if (response.ok) {
+          alertBox.className = 'alert alert-success';
+          alertBox.textContent = 'Verification logged successfully!';
+          alertBox.classList.remove('d-none');
+          setTimeout(() => { window.location.reload(); }, 1500);
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Failed to submit verification record.';
+          alertBox.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'A network error occurred. Please try again.';
+        alertBox.classList.remove('d-none');
+      }
+    });
+  });
+</script>
+{% endblock %}
