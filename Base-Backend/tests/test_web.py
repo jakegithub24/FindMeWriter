@@ -31,3 +31,9 @@ def test_terms_and_privacy_pages(client):
     response = client.get('/privacy')
     assert response.status_code == 200
     assert b"Privacy Policy" in response.data
+
+def test_profile_redirects_for_anonymous(client):
+    response = client.get('/profile')
+    assert response.status_code == 302
+    assert response.headers['Location'] == '/login'
+

@@ -89,7 +89,7 @@
             <div class="d-flex align-items-center gap-2">
               {% if g.user %}
                 <span class="navbar-text me-2">
-                  Hello, <strong>{{ g.user.name }}</strong>
+                  Hello, <a href="/profile" class="text-decoration-none fw-bold">{{ g.user.name }}</a>
                   <span class="badge badge-role-{{ g.user.role }} ms-1" style="font-size: 0.8rem;">
                     {{ g.user.role | capitalize }}
                   </span>

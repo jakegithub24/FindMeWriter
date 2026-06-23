@@ -33,4 +33,46 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('login-form');
+    const errMsg = document.getElementById('error-message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errMsg.classList.add('d-none');
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Set JWT cookies for server-side page templates
+          document.cookie = `access_token=${data.access_token}; path=/; max-age=3600; SameSite=Lax`;
+          document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+          
+          window.location.href = '/dashboard';
+        } else {
+          errMsg.textContent = data.error || 'Invalid credentials. Please try again.';
+          errMsg.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        errMsg.textContent = 'A network error occurred. Please try again.';
+        errMsg.classList.remove('d-none');
+      }
+    });
+  });
+</script>
 {% endblock %}

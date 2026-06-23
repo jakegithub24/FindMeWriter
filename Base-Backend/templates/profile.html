@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - FindMeWriter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-7">
+    <div class="card p-4">
+      <h1 class="h3 fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Profile Settings</h1>
+
+      <!-- Alert Message Box -->
+      <div id="status-alert" class="alert d-none" role="alert" aria-live="polite"></div>
+
+      <form id="profile-form" novalidate>
+        <div class="row g-3">
+          <!-- Common Fields -->
+          <div class="col-sm-6">
+            <label for="public_id" class="form-label">Public ID (Read-only)</label>
+            <input type="text" class="form-control bg-light" id="public_id" value="{{ profile.public_id or 'N/A' }}" readonly>
+          </div>
+
+          <div class="col-sm-6">
+            <label for="email" class="form-label">Email Address (Read-only)</label>
+            <input type="email" class="form-control bg-light" id="email" value="{{ profile.email }}" readonly>
+          </div>
+
+          <div class="col-12">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ profile.name }}" required autocomplete="name">
+          </div>
+
+          <div class="col-12">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone" value="{{ profile.phone or '' }}" autocomplete="tel">
+          </div>
+
+          <!-- Role-specific Fields -->
+          {% if profile.role == 'student' %}
+            <div class="col-12 border-top pt-3 mt-4">
+              <h2 class="h5 fw-bold text-primary">Student Details</h2>
+            </div>
+            <div class="col-12">
+              <label for="institution" class="form-label">Institution / School / College</label>
+              <input type="text" class="form-control" id="institution" name="institution" value="{{ profile.institution or '' }}">
+            </div>
+            <div class="col-12">
+              <label for="accessibility_needs" class="form-label">Accessibility Needs & Preferences (e.g. Scribe language, medium of exam)</label>
+              <textarea class="form-control" id="accessibility_needs" name="accessibility_needs" rows="3">{{ profile.accessibility_needs or '' }}</textarea>
+            </div>
+
+          {% elif profile.role == 'volunteer' %}
+            <div class="col-12 border-top pt-3 mt-4">
+              <h2 class="h5 fw-bold text-primary">Volunteer Details</h2>
+            </div>
+            <div class="col-sm-6">
+              <label for="city" class="form-label">City</label>
+              <input type="text" class="form-control" id="city" name="city" value="{{ profile.city or '' }}">
+            </div>
+            <div class="col-sm-6">
+              <label for="languages" class="form-label">Languages (Comma-separated)</label>
+              <input type="text" class="form-control" id="languages" name="languages" value="{{ profile.languages or '' }}" placeholder="e.g. English, Hindi, Tamil">
+            </div>
+
+          {% elif profile.role == 'college' %}
+            <div class="col-12 border-top pt-3 mt-4">
+              <h2 class="h5 fw-bold text-primary">College / Institution Details</h2>
+            </div>
+            <div class="col-12">
+              <label for="institution_name" class="form-label">Institution / College Name</label>
+              <input type="text" class="form-control" id="institution_name" name="institution_name" value="{{ profile.institution_name or '' }}">
+            </div>
+            <div class="col-12">
+              <label for="affiliation_code" class="form-label">Affiliation / Board Code</label>
+              <input type="text" class="form-control" id="affiliation_code" name="affiliation_code" value="{{ profile.affiliation_code or '' }}">
+            </div>
+            <div class="col-12">
+              <label for="address" class="form-label">Full Address</label>
+              <textarea class="form-control" id="address" name="address" rows="3">{{ profile.address or '' }}</textarea>
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 mt-4">
+          <i class="fa-solid fa-floppy-disk me-2" aria-hidden="true"></i>Save Profile Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('profile-form');
+    const alertBox = document.getElementById('status-alert');
+
+    // Helper function to read a cookie
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('d-none');
+
+      // Build JSON payload from form fields
+      const payload = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+      };
+
+      // Add role-specific details
+      const institutionEl = document.getElementById('institution');
+      const accessibilityEl = document.getElementById('accessibility_needs');
+      const cityEl = document.getElementById('city');
+      const languagesEl = document.getElementById('languages');
+      const instNameEl = document.getElementById('institution_name');
+      const affCodeEl = document.getElementById('affiliation_code');
+      const addressEl = document.getElementById('address');
+
+      if (institutionEl) payload.institution = institutionEl.value;
+      if (accessibilityEl) payload.accessibility_needs = accessibilityEl.value;
+      if (cityEl) payload.city = cityEl.value;
+      if (languagesEl) payload.languages = languagesEl.value;
+      if (instNameEl) payload.institution_name = instNameEl.value;
+      if (affCodeEl) payload.affiliation_code = affCodeEl.value;
+      if (addressEl) payload.address = addressEl.value;
+
+      try {
+        const token = getCookie('access_token');
+        const response = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alertBox.className = 'alert alert-success';
+          alertBox.textContent = 'Profile updated successfully!';
+          alertBox.classList.remove('d-none');
+          
+          // Optionally, reload page after delay to reflect any navbar updates
+          setTimeout(() => { window.location.reload(); }, 1500);
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Failed to update profile settings.';
+          alertBox.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'An unexpected network error occurred.';
+        alertBox.classList.remove('d-none');
+      }
+    });
+  });
+</script>
+{% endblock %}

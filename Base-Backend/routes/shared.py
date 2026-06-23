@@ -74,28 +74,83 @@ def submit_rating():
     return jsonify({'message': 'Rating submitted'}), 201
 
 @shared_bp.route('/settings', methods=['PUT'])
-@require_role('student')  # any role can update, but we'll allow all
 def update_settings():
     user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json()
     name = data.get('name')
     phone = data.get('phone')
-    if not name and not phone:
-        return jsonify({'error': 'No fields to update'}), 400
+    
     db = get_db()
     cursor = db.cursor()
-    updates = []
-    params = []
-    if name:
-        updates.append("name = ?")
-        params.append(name)
-    if phone:
-        updates.append("phone = ?")
-        params.append(phone)
-    params.append(user['user_id'])
-    cursor.execute(f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", params)
+    
+    # Update users table if name or phone provided
+    if name or phone:
+        updates = []
+        params = []
+        if name:
+            updates.append("name = ?")
+            params.append(name)
+        if phone:
+            updates.append("phone = ?")
+            params.append(phone)
+        params.append(user['user_id'])
+        cursor.execute(f"UPDATE users SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?", params)
+        
+    # Update role-specific table details
+    role = user['role']
+    if role == 'student':
+        institution = data.get('institution')
+        accessibility = data.get('accessibility_needs')
+        if institution is not None or accessibility is not None:
+            updates = []
+            params = []
+            if institution is not None:
+                updates.append("institution = ?")
+                params.append(institution)
+            if accessibility is not None:
+                updates.append("accessibility_needs = ?")
+                params.append(accessibility)
+            params.append(user['user_id'])
+            cursor.execute(f"UPDATE students SET {', '.join(updates)} WHERE user_id = ?", params)
+            
+    elif role == 'volunteer':
+        city = data.get('city')
+        languages = data.get('languages')
+        if city is not None or languages is not None:
+            updates = []
+            params = []
+            if city is not None:
+                updates.append("city = ?")
+                params.append(city)
+            if languages is not None:
+                updates.append("languages = ?")
+                params.append(languages)
+            params.append(user['user_id'])
+            cursor.execute(f"UPDATE volunteers SET {', '.join(updates)} WHERE user_id = ?", params)
+            
+    elif role == 'college':
+        institution_name = data.get('institution_name')
+        affiliation_code = data.get('affiliation_code')
+        address = data.get('address')
+        if institution_name is not None or affiliation_code is not None or address is not None:
+            updates = []
+            params = []
+            if institution_name is not None:
+                updates.append("institution_name = ?")
+                params.append(institution_name)
+            if affiliation_code is not None:
+                updates.append("affiliation_code = ?")
+                params.append(affiliation_code)
+            if address is not None:
+                updates.append("address = ?")
+                params.append(address)
+            params.append(user['user_id'])
+            cursor.execute(f"UPDATE colleges SET {', '.join(updates)} WHERE user_id = ?", params)
+            
     db.commit()
-    return jsonify({'message': 'Settings updated'}), 200
+    return jsonify({'message': 'Profile settings updated'}), 200
 
 @shared_bp.route('/account/delete', methods=['POST'])
 @require_role('student')

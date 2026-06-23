@@ -104,3 +104,27 @@ def export():
     else:
         output = export_json(data_list)
         return output, 200, {'Content-Type': 'application/json'}
+
+@admin_bp.route('/mfa/setup', methods=['GET'])
+@require_role('admin')
+def mfa_setup():
+    secret = current_app.config['ADMIN_TOTP_SECRET']
+    # Import pyotp in case it's not imported in this scope (it is imported in middleware/auth but let's import it to be safe)
+    import pyotp
+    totp = pyotp.TOTP(secret)
+    # Get current logged in user details if available, else default to admin email
+    email = 'admin@findmewriter.com'
+    user = get_current_user()
+    if user:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT email FROM users WHERE id = ?", (user['user_id'],))
+        row = cursor.fetchone()
+        if row:
+            email = row['email']
+    uri = totp.provisioning_uri(name=email, issuer_name="FindMeWriter")
+    return jsonify({
+        'secret': secret,
+        'provisioning_uri': uri
+    }), 200
+

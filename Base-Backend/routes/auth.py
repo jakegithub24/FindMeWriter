@@ -70,7 +70,14 @@ def register():
         encrypt_file(temp_path, encrypted_path)
         os.remove(temp_path)
 
-        public_id = generate_public_id('STU' if role == 'student' else 'VOL')
+        while True:
+            public_id = generate_public_id('STU' if role == 'student' else 'VOL')
+            table_name = 'students' if role == 'student' else 'volunteers'
+            id_col = 'student_id' if role == 'student' else 'volunteer_id'
+            cursor.execute(f"SELECT user_id FROM {table_name} WHERE {id_col} = ?", (public_id,))
+            if not cursor.fetchone():
+                break
+
         if role == 'student':
             institution = data.get('institution')
             accessibility = data.get('accessibility_needs')
@@ -86,7 +93,11 @@ def register():
                 (user_id, public_id, aadhaar_hash, encrypted_path, city, languages)
             )
     elif role == 'college':
-        college_id = generate_public_id('CLG')
+        while True:
+            college_id = generate_public_id('CLG')
+            cursor.execute("SELECT user_id FROM colleges WHERE college_id = ?", (college_id,))
+            if not cursor.fetchone():
+                break
         institution_name = data.get('institution_name')
         affiliation_code = data.get('affiliation_code')
         address = data.get('address')

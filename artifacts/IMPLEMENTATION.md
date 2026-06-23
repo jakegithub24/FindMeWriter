@@ -13,12 +13,12 @@ Build the MVP as a **vertical slice**: one complete user journey (Student regist
 
 
 ### Phase 1: Authentication & Identity (Week 2)
-- [ ] Role-based registration with file upload (Aadhaar encryption)
-- [ ] Login/logout with JWT (access + refresh)
-- [ ] Profile completion pages per role
-- [ ] Public ID generation utility
-- [ ] Admin MFA with TOTP
-- [ ] **Milestone**: All four roles can register and log in securely
+- [x] Role-based registration with file upload (Aadhaar encryption)
+- [x] Login/logout with JWT (access + refresh)
+- [x] Profile completion pages per role
+- [x] Public ID generation utility
+- [x] Admin MFA with TOTP
+- [x] **Milestone**: All four roles can register and log in securely
 
 ### Phase 2: Request & Matching (Week 3)
 - [ ] Student request creation form

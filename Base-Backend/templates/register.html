@@ -71,6 +71,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     const roleSelect = document.getElementById('role');
     const aadhaarFields = document.getElementById('aadhaar-fields');
+    const form = document.getElementById('register-form');
+    const errMsg = document.getElementById('error-message');
     
     roleSelect.addEventListener('change', () => {
       const val = roleSelect.value;
@@ -82,6 +84,56 @@
         aadhaarFields.classList.add('d-none');
         document.getElementById('aadhaar').removeAttribute('required');
         document.getElementById('aadhaar_copy').removeAttribute('required');
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errMsg.classList.add('d-none');
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // User registered successfully! Auto-login the user.
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          });
+
+          const loginData = await loginResponse.json();
+
+          if (loginResponse.ok) {
+            document.cookie = `access_token=${loginData.access_token}; path=/; max-age=3600; SameSite=Lax`;
+            document.cookie = `refresh_token=${loginData.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+            
+            // Redirect to profile setup/completion page or dashboard
+            window.location.href = '/profile';
+          } else {
+            // If auto-login fails, redirect to manual login
+            window.location.href = '/login';
+          }
+        } else {
+          errMsg.textContent = data.error || 'Registration failed. Please verify your inputs.';
+          errMsg.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        errMsg.textContent = 'A network error occurred. Please try again.';
+        errMsg.classList.remove('d-none');
       }
     });
   });

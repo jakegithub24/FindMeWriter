@@ -11,12 +11,12 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 | S1-02 | Flask app factory + config.py | — | 🔵 | |
 | S1-03 | SQLite schema + db.py + init CLI | — | 🔵 | |
 | S1-04 | Base template + Bootstrap + themes | — | 🔵 | |
-| S1-05 | Aadhaar encryption middleware | — | 🟡 | |
-| S1-06 | Public ID generator utility | — | 🟡 | |
-| S1-07 | Registration (all roles) + file upload | — | 🟡 | |
-| S1-08 | Login + JWT + logout | — | 🟡 | |
-| S1-09 | Admin MFA (TOTP) | — | 🟡 | |
-| S1-10 | Role-based access decorators | — | 🟡 | |
+| S1-05 | Aadhaar encryption middleware | — | 🔵 | |
+| S1-06 | Public ID generator utility | — | 🔵 | |
+| S1-07 | Registration (all roles) + file upload | — | 🔵 | |
+| S1-08 | Login + JWT + logout | — | 🔵 | |
+| S1-09 | Admin MFA (TOTP) | — | 🔵 | |
+| S1-10 | Role-based access decorators | — | 🔵 | |
 
 ## Sprint 2: Requests & Matching (Week 3)
 
@@ -87,7 +87,7 @@ Update status via PR or commit message references. Use labels: `🟡 Not Started
 
 ## Overall Progress
 - **Total Tasks**: 42
-- **Complete**: 3
+- **Complete**: 9
 - **In Progress**: 0
-- **Not Started**: 39
+- **Not Started**: 33
 - **Blocked**: 0
